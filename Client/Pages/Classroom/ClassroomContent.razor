@@ -253,35 +253,32 @@
     <button @onclick="AddPost">Add Post</button>
 </div>
 
+
 @if (filteredPosts.Any())
 {
     <div class="post-container">
         @foreach (var post in filteredPosts)
         {
+            <!-- Post card remains unchanged -->
             <div class="post-card">
                 <div class="post-card-header">
                     <h5>@post.SenderName</h5>
                 </div>
                 <div class="post-card-body">
                     <p>@post.PostDescription</p>
-                    @if (!string.IsNullOrWhiteSpace(post.PostAttachment))
+                    @if (!string.IsNullOrEmpty(post.PostAttachment))
                     {
                         <div class="post-card-attachment">
-                            <a href="@post.PostAttachment" target="_blank">View Attachment</a>
-                        </div>
-                    }
-                    @if (post.IsSubmissionPost)
-                    {
-                        <div class="post-card-attachment">
-                            <button class="submission-button" @onclick="() => ViewSubmission(post)">View Submission</button>
+                            <a href="@post.PostAttachment">Attachment</a>
                         </div>
                     }
                 </div>
+
                 <!-- Render comments here -->
                 <div class="comment-container">
-                    @if (post.Comments.Any())
+                    @if (comments.ContainsKey(post.PostId) && comments[post.PostId].Any())
                     {
-                        @foreach (var comment in post.Comments)
+                        @foreach (var comment in comments[post.PostId])
                         {
                             <div class="comment-card">
                                 <p><strong>@comment.SenderName:</strong> @comment.SenderComment</p>
@@ -293,10 +290,11 @@
                         <p>No comments yet.</p>
                     }
                 </div>
-                <!-- Add new comment box -->
+
+                <!-- Add new comment box remains unchanged -->
                 <div class="new-comment-box">
-                    <input type="text" placeholder="Add a new comment..." @bind="@post.newComment" />
-                    <button class="add-comment-button" @onclick="() => AddComment(post)">Add Comment</button>
+                    <input type="text" @bind="newCommentInputs[post.PostId]" placeholder="Add a comment..." />
+                    <button class="add-comment-button" @onclick="() => AddComment(post.PostId)">Add Comment</button>
                 </div>
             </div>
         }
@@ -306,6 +304,7 @@ else
 {
     <p>No posts available for this classroom.</p>
 }
+
 
 
 
@@ -327,21 +326,27 @@ else
     };
 
     private IEnumerable<Post> filteredPosts;
+    private Dictionary<int, List<Comment>> comments = new Dictionary<int, List<Comment>>();
+    private Dictionary<int, string> newCommentInputs = new Dictionary<int, string>(); // Dictionary to hold new comment inputs
 
     protected override void OnParametersSet()
     {
         filteredPosts = posts.Where(p => p.ClassroomId == CourseId);
-        // Add sample comments to existing posts
-        posts[0].Comments.AddRange(new List<Comment>
+
+        // Initialize comments dictionary with empty lists for each post
+        foreach (var post in filteredPosts)
         {
-            new Comment { CommentId = 1, PostId = posts[0].PostId, ClassroomId = 1, SenderName = "Eve Johnson", SenderComment = "Looking forward to working on this assignment!" },
-            new Comment { CommentId = 2, PostId = posts[0].PostId, ClassroomId = 1, SenderName = "Chris Lee", SenderComment = "Thanks for sharing the guidelines." }
+            comments[post.PostId] = new List<Comment>();
+            newCommentInputs[post.PostId] = ""; // Initialize new comment input for each post
+        }
+
+        // Add sample comments to existing posts
+        comments[1].AddRange(new List<Comment>
+        {
+            new Comment { CommentId = 1, PostId = 1, ClassroomId = 1, SenderName = "Eve Johnson", SenderComment = "Looking forward to working on this assignment!" },
+            new Comment { CommentId = 2, PostId = 1, ClassroomId = 1, SenderName = "Chris Lee", SenderComment = "Thanks for sharing the guidelines." }
         });
 
-        posts[2].Comments.AddRange(new List<Comment>
-        {
-            new Comment { CommentId = 3, PostId = posts[2].PostId, ClassroomId = CourseId, SenderName = "Grace Wang", SenderComment = "These reading materials are really helpful." }
-        });
     }
 
     private void AddPost()
@@ -353,6 +358,10 @@ else
             
             // Refresh the filtered posts to include the new post
             filteredPosts = posts.Where(p => p.ClassroomId == CourseId).OrderByDescending(p => p.PostId);
+
+            // Initialize comment list for the new post
+            comments[newPostId] = new List<Comment>();
+            newCommentInputs[newPostId] = ""; // Initialize new comment input for the new post
         }
     }
 
@@ -370,8 +379,6 @@ else
         public string PostAttachment { get; set; }
         public int ClassroomId { get; set; }
         public bool IsSubmissionPost { get; set; } // Indicates if the post is a submission post
-        public List<Comment> Comments { get; } = new List<Comment>(); // List of comments for the post
-        public string newComment { get; set; } // New comment input field
     }
 
     public class Comment
@@ -383,19 +390,25 @@ else
         public string SenderComment { get; set; }
     }
 
-    private void AddComment(Post post)
+    private void AddComment(int postId)
     {
-        if (!string.IsNullOrWhiteSpace(post.newComment))
+        if (comments.ContainsKey(postId) && !string.IsNullOrWhiteSpace(newCommentInputs[postId]))
         {
-            var newCommentId = post.Comments.Any() ? post.Comments.Max(c => c.CommentId) + 1 : 1;
-            post.Comments.Add(new Comment { CommentId = newCommentId, PostId = post.PostId, ClassroomId = CourseId, SenderName = "User", SenderComment = post.newComment });
+            var newCommentId = comments[postId].Any() ? comments[postId].Max(c => c.CommentId) + 1 : 1;
+            var newComment = new Comment { CommentId = newCommentId, PostId = postId, ClassroomId = CourseId, SenderName = "User", SenderComment = newCommentInputs[postId] };
+
+            // Add the new comment directly to the post
+            comments[postId].Add(newComment);
 
             // Clear the input field after adding the comment
-            post.newComment = "";
+            newCommentInputs[postId] = "";
 
             // Refresh the UI
             StateHasChanged();
         }
     }
 }
+
+
+
 

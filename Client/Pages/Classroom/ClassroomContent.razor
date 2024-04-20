@@ -187,6 +187,47 @@
     input[type="checkbox"]:checked + .toggle-slider:before {
         transform: translateX(20px);
     }
+    
+    /* Comment card styles */
+    .comment-card {
+        background-color: #f0f0f0;
+        padding: 10px;
+        border-radius: 4px;
+        margin-bottom: 5px;
+        text-align: left; /* Align text to the left */
+    }
+
+    .comment-card p {
+        margin: 0;
+    }
+
+    /* New comment box styles */
+    .new-comment-box {
+        margin-top: 15px;
+    }
+
+    .new-comment-box input[type="text"] {
+        width: calc(100% - 100px); /* Adjust width as needed */
+        padding: 8px;
+        border: 1px solid #ced4da;
+        border-radius: 4px;
+        box-sizing: border-box;
+        margin-right: 10px;
+    }
+
+    .new-comment-box button.add-comment-button {
+        padding: 8px 15px;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 14px;
+    }
+
+    .new-comment-box button.add-comment-button:hover {
+        background-color: #0056b3;
+    }
 </style>
 
 <h3>Classroom Posts for Course ID: @CourseId</h3>
@@ -236,6 +277,27 @@
                         </div>
                     }
                 </div>
+                <!-- Render comments here -->
+                <div class="comment-container">
+                    @if (post.Comments.Any())
+                    {
+                        @foreach (var comment in post.Comments)
+                        {
+                            <div class="comment-card">
+                                <p><strong>@comment.SenderName:</strong> @comment.SenderComment</p>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <p>No comments yet.</p>
+                    }
+                </div>
+                <!-- Add new comment box -->
+                <div class="new-comment-box">
+                    <input type="text" placeholder="Add a new comment..." @bind="@post.newComment" />
+                    <button class="add-comment-button" @onclick="() => AddComment(post)">Add Comment</button>
+                </div>
             </div>
         }
     </div>
@@ -244,6 +306,8 @@ else
 {
     <p>No posts available for this classroom.</p>
 }
+
+
 
 @code {
     [Parameter]
@@ -256,7 +320,7 @@ else
     private List<Post> posts = new List<Post>
     {
         // Initial dummy posts
-        new Post {PostId = 1, SenderName = "Alice Smith", PostDescription = "Introduction to Programming assignment due next week.", PostAttachment = "http://example.com/assignment1.pdf", ClassroomId = 1},
+        new Post {PostId = 1, SenderName = "Alice Smith", PostDescription = "Introduction to Programming assignment due next week.", PostAttachment = "http://example.com/assignment1.pdf", ClassroomId = 1, IsSubmissionPost = true},
         new Post {PostId = 2, SenderName = "Bob Jones", PostDescription = "Advanced Web Development project guidelines.", ClassroomId = 1},
         new Post {PostId = 3, SenderName = "Charlie Johnson", PostDescription = "Data Science 101 reading materials.", PostAttachment = "http://example.com/reading.pdf", ClassroomId = 2},
         new Post {PostId = 4, SenderName = "Dana White", PostDescription = "Machine Learning for Beginners resources.", PostAttachment = "http://example.com/resources.pdf", ClassroomId = 3}
@@ -267,6 +331,17 @@ else
     protected override void OnParametersSet()
     {
         filteredPosts = posts.Where(p => p.ClassroomId == CourseId);
+        // Add sample comments to existing posts
+        posts[0].Comments.AddRange(new List<Comment>
+        {
+            new Comment { CommentId = 1, PostId = posts[0].PostId, ClassroomId = 1, SenderName = "Eve Johnson", SenderComment = "Looking forward to working on this assignment!" },
+            new Comment { CommentId = 2, PostId = posts[0].PostId, ClassroomId = 1, SenderName = "Chris Lee", SenderComment = "Thanks for sharing the guidelines." }
+        });
+
+        posts[2].Comments.AddRange(new List<Comment>
+        {
+            new Comment { CommentId = 3, PostId = posts[2].PostId, ClassroomId = CourseId, SenderName = "Grace Wang", SenderComment = "These reading materials are really helpful." }
+        });
     }
 
     private void AddPost()
@@ -295,5 +370,32 @@ else
         public string PostAttachment { get; set; }
         public int ClassroomId { get; set; }
         public bool IsSubmissionPost { get; set; } // Indicates if the post is a submission post
+        public List<Comment> Comments { get; } = new List<Comment>(); // List of comments for the post
+        public string newComment { get; set; } // New comment input field
+    }
+
+    public class Comment
+    {
+        public int CommentId { get; set; }
+        public int PostId { get; set; }
+        public int ClassroomId { get; set; }
+        public string SenderName { get; set; }
+        public string SenderComment { get; set; }
+    }
+
+    private void AddComment(Post post)
+    {
+        if (!string.IsNullOrWhiteSpace(post.newComment))
+        {
+            var newCommentId = post.Comments.Any() ? post.Comments.Max(c => c.CommentId) + 1 : 1;
+            post.Comments.Add(new Comment { CommentId = newCommentId, PostId = post.PostId, ClassroomId = CourseId, SenderName = "User", SenderComment = post.newComment });
+
+            // Clear the input field after adding the comment
+            post.newComment = "";
+
+            // Refresh the UI
+            StateHasChanged();
+        }
     }
 }
+

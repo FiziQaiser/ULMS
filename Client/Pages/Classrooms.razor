@@ -1,0 +1,98 @@
+@page "/classroom"
+@inject NavigationManager NavigationManager;
+@inject UserService UserService;
+@inject HttpClient HttpClient
+
+<PageTitle>Classroom</PageTitle>
+
+<style>
+    .courses-container {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-around;
+        gap: 30px;
+        padding: 20px;
+    }
+
+    .course-card {
+        width: calc(33.333% - 30px);
+        background: linear-gradient(145deg, #ffffff, #f0f0f0);
+        border-radius: 10px;
+        box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        transition: all 0.3s ease;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 20px;
+        gap: 15px;
+        height: 200px; /* Set a fixed height for uniformity */
+    }
+
+    .course-info {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        height: 100%;
+        text-align: center;
+    }
+
+    .course-info h5 {
+        color: #333;
+        font-size: 1.2em;
+        text-transform: uppercase;
+        font-weight: bold;
+        margin-bottom: 5px;
+    }
+
+    .course-btn {
+        background-color: #007bff;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 5px;
+        font-weight: bold;
+        letter-spacing: 1px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        transition: background-color 0.3s ease, transform 0.3s ease;
+    }
+
+    .course-btn:hover, .course-btn:focus {
+        background-color: #0056b3;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+    }
+</style>
+
+<div>
+    <h3>Classroom</h3>
+    <div class="courses-container">
+        @foreach (var classroom in userClassrooms)
+        {
+            <div class="course-card">
+                <div class="course-info">
+                    <h5>@classroom.ClassroomName</h5>
+                    <button @onclick="() => NavigateToCourse(classroom.ClassroomId)" class="btn btn-primary course-btn">
+                        Enter Classroom
+                    </button>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    private List<ULMS.Shared.Models.Classroom> userClassrooms = new List<ULMS.Shared.Models.Classroom>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var loggedInUserId = UserService.GetLoggedInUser().Id;
+        userClassrooms = await HttpClient.GetFromJsonAsync<List<ULMS.Shared.Models.Classroom>>($"api/classroom/user/{loggedInUserId}");
+    }
+
+    private void NavigateToCourse(long courseId)
+    {
+        NavigationManager.NavigateTo($"/classroom/{courseId}");
+    }
+}

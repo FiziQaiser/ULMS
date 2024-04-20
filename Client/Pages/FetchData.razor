@@ -1,5 +1,6 @@
 ﻿@page "/fetchdata"
 @using ULMS.Shared
+@using ULMS.Shared.Models
 @inject HttpClient Http
 
 <PageTitle>Weather forecast</PageTitle>
@@ -39,10 +40,14 @@ else
 
 @code {
     private WeatherForecast[]? forecasts;
+    string email = "admin@gmail.com";
+    string password = "admin"; // apple
 
     protected override async Task OnInitializedAsync()
     {
         forecasts = await Http.GetFromJsonAsync<WeatherForecast[]>("WeatherForecast");
+        Account result = await Http.GetFromJsonAsync<Account>($"/account/validate?email={email}&password={password}");
+        Console.WriteLine($"result is {result.Name}");
     }
 }
 

@@ -1,4 +1,7 @@
 ﻿using Microsoft.AspNetCore.ResponseCompression;
+using Microsoft.EntityFrameworkCore;
+using ULMS.Server;
+using ULMS.Shared.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -6,6 +9,11 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();
+
+var conn = builder.Configuration.GetConnectionString("connectionstring");
+
+builder.Services.AddEntityFrameworkNpgsql()
+    .AddDbContext<PostgresContext>(opt => opt.UseNpgsql(conn));
 
 var app = builder.Build();
 

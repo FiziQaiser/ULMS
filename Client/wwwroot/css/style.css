@@ -1,0 +1,15 @@
+/* Sample CSS File */
+
+/* Apply styles to the fizzy div */
+.fizzy {
+    background-color: #f0f0f0;
+    padding: 20px;
+}
+
+/* Style the h3 element inside fizzy */
+.fizzy h3 {
+    color: blue;
+    font-size: 24px;
+    text-align: center;
+    margin-bottom: 20px;
+}

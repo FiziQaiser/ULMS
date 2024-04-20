@@ -1,3 +1,143 @@
-@page "/submit"
+@page "/submit/{PostId:int}"
 
-<h4> Submission </h4>
+<h3>Submit Work</h3>
+
+@if (submissionPost != null)
+{
+    <div>
+        <h4>Post Description:</h4>
+        <p>@submissionPost.PostDescription</p>
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(submissionPost.PostAttachment))
+    {
+        <div>
+            <h4>Attachment:</h4>
+            <a href="@submissionPost.PostAttachment" target="_blank">View Attachment</a>
+        </div>
+    }
+
+    <div class="submission-form">
+        <h4>Submit Your Work</h4>
+        <div>
+            <label for="submissionUrl">Submission URL:</label>
+            <input type="text" @bind="submissionUrl" id="submissionUrl" />
+        </div>
+        <button @onclick="SubmitWork">Submit</button>
+    </div>
+}
+else
+{
+    <p>No submission found for this post.</p>
+}
+
+@if (showSuccessMessage)
+{
+    <div class="alert alert-success" role="alert">
+        Submission successful!
+    </div>
+}
+
+@code {
+    [Parameter]
+    public int PostId { get; set; }
+
+    private string submissionUrl;
+    private Post submissionPost;
+    private bool showSuccessMessage = false;
+
+    protected override void OnInitialized()
+    {
+        // In a real application, you would retrieve the submission post from the backend based on the PostId
+        // For the sake of this example, let's assume submissionPost is retrieved from a database or API call
+        submissionPost = new Post
+        {
+            PostId = PostId,
+            PostDescription = "Your submission description goes here",
+            PostAttachment = "http://example.com/attachment.pdf"
+        };
+    }
+
+    private void SubmitWork()
+    {
+        // Handle submission logic here, such as sending the submission URL to the backend
+        // For demonstration purposes, let's just display an alert with the submitted URL
+        if (!string.IsNullOrWhiteSpace(submissionUrl))
+        {
+            // In a real application, you would send the submission URL to the backend for processing
+            // For demonstration purposes, let's just display an alert with the submitted URL
+            // alert($"Submitted URL: {submissionUrl}");
+            Console.WriteLine($"Submitted URL: {submissionUrl}");
+            showSuccessMessage = true;
+        }
+    }
+
+    public class Post
+    {
+        public int PostId { get; set; }
+        public string PostDescription { get; set; }
+        public string PostAttachment { get; set; }
+    }
+}
+
+<style>
+    h3 {
+        color: #333;
+    }
+
+    .submission-form {
+        margin-top: 20px;
+        padding: 15px;
+        border: 1px solid #dee2e6;
+        border-radius: 5px;
+        background-color: #f8f9fa;
+    }
+
+    .submission-form h4 {
+        margin-bottom: 15px;
+        color: #333;
+    }
+
+    .submission-form div {
+        margin-bottom: 10px;
+    }
+
+    .submission-form label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: bold;
+        color: #555;
+    }
+
+    .submission-form input[type="text"] {
+        width: 100%;
+        padding: 8px;
+        border: 1px solid #ced4da;
+        border-radius: 4px;
+        box-sizing: border-box;
+    }
+
+    .submission-form button {
+        display: inline-block;
+        padding: 10px 20px;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 16px;
+    }
+
+    .submission-form button:hover {
+        background-color: #0056b3;
+    }
+
+    .alert {
+        margin-top: 20px;
+        padding: 15px;
+        border-radius: 5px;
+        background-color: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+    }
+</style>

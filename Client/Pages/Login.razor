@@ -1,0 +1,87 @@
+@page "/"
+@using ULMS.Shared.Models
+@inject HttpClient Http
+@inject NavigationManager NavigationManager
+@inject UserService UserService
+
+
+<div class="login-form">
+    <h1>Login</h1>
+    <div class="container">
+        <div class="main">
+            <div class="content">
+                <h2>Log In</h2>
+                <form>
+                    <input type="text" placeholder="User Name" @bind-value="email">
+                    <input type="password" placeholder="User Password" @bind-value="password">
+                    <button type="button" @onclick="SubmitForm" disabled="@isLoading">
+                        @if (isLoading)
+                        {
+                            <span class="loading-spinner"></span>
+                            <span>Loading...</span>
+                        }
+                        else
+                        {
+                            <span>Login</span>
+                        }
+                    </button>
+                </form>
+                <p class="account">Don't Have An Account? <a href="#">Register</a></p>
+            </div>
+            <div class="form-img">
+                <!-- Add any image or content you want to display -->
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (!string.IsNullOrEmpty(submissionMessage))
+{
+    <div class="alert alert-warning" role="alert">
+        @submissionMessage
+    </div>
+}
+
+@code {
+    private string email = "";
+    private string password = "";
+    private string submissionMessage = "";
+    private bool isLoading = false;
+
+    private async Task SubmitForm()
+    {
+        isLoading = true;
+        submissionMessage = "";
+
+        Account user = await Http.GetFromJsonAsync<Account>($"/account/validate?email={email}&password={password}");
+
+        if (user != null)
+        {
+            UserService.SetLoggedInUser(user);
+            
+            submissionMessage = "Login successful.";
+            // Redirect based on role
+            switch (user.Role)
+            {
+                case "Admin":
+                    NavigationManager.NavigateTo("/admindashboard");
+                    break;
+                case "Student":
+                    NavigationManager.NavigateTo("/studentdashboard");
+                    break;
+                case "Instructor":
+                    NavigationManager.NavigateTo("/instructordashboard");
+                    break;
+                default:
+                    NavigationManager.NavigateTo("/home");
+                    break;
+            }
+        }
+        else
+        {
+            submissionMessage = "Login failed. Invalid username or password.";
+        }
+
+        isLoading = false;
+    }
+}

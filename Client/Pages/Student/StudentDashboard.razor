@@ -1,0 +1,10 @@
+@page "/studentdashboard"
+@inject HttpClient Http
+@using ULMS.Shared.Models
+@inject UserService UserService
+
+
+<h1>Welcome, @UserService.GetLoggedInUser().Name!</h1>
+
+@code {
+}

@@ -1,6 +1,8 @@
 @page "/classroom/{CourseId:int}"
 @inject NavigationManager NavigationManager;
 @using ULMS.Shared.Models
+@inject HttpClient Http
+@inject UserService UserService
 
 <style>
     /* Post Creation Form Styles */
@@ -251,14 +253,14 @@
             <span class="toggle-slider"></span>
         </label>
     </div>
-    <button @onclick="AddPost">Add Post</button>
+    <button @onclick="AddPostAsync">Add Post</button>
 </div>
 
 
-@if (filteredPosts.Any())
+@if (filteredPosts != null && filteredPosts.Any())
 {
     <div class="post-container">
-        @foreach (var post in filteredPosts)
+        @foreach (var post in filteredPosts.Reverse())
         {
             <!-- Post card remains unchanged -->
             <div class="post-card">
@@ -271,6 +273,14 @@
                     {
                         <div class="post-card-attachment">
                             <a href="@post.PostAttachment">Attachment</a>
+                        </div>
+                    }
+                    
+                    <!-- View Submission button -->
+                    @if (post.IsSubmissionPost)
+                    {
+                        <div>
+                            <button @onclick="() => ViewSubmission(post)" class="submission-button">View Submission</button>
                         </div>
                     }
                 </div>
@@ -288,14 +298,14 @@
                     }
                     else
                     {
-                        <p>No comments yet.</p>
+                        @* <p>No comments yet.</p> *@
                     }
                 </div>
 
                 <!-- Add new comment box remains unchanged -->
                 <div class="new-comment-box">
                     <input type="text" @bind="newCommentInputs[post.PostId]" placeholder="Add a comment..." />
-                    <button class="add-comment-button" @onclick="() => AddComment(post.PostId)">Add Comment</button>
+                    <button class="add-comment-button" @onclick="() => AddCommentAsync(post.PostId, newCommentInputs[post.PostId])">Add Comment</button>
                 </div>
             </div>
         }
@@ -306,9 +316,6 @@ else
     <p>No posts available for this classroom.</p>
 }
 
-
-
-
 @code {
     [Parameter]
     public int CourseId { get; set; }
@@ -317,52 +324,73 @@ else
     private string newPostAttachment;
     private bool isSubmissionPost;
 
-    private List<Post> posts = new List<Post>
-    {
-        // Initial dummy posts
-        new Post {PostId = 1, SenderName = "Alice Smith", PostDescription = "Introduction to Programming assignment due next week.", PostAttachment = "http://example.com/assignment1.pdf", ClassroomId = 1, IsSubmissionPost = true},
-        new Post {PostId = 2, SenderName = "Bob Jones", PostDescription = "Advanced Web Development project guidelines.", ClassroomId = 1},
-        new Post {PostId = 3, SenderName = "Charlie Johnson", PostDescription = "Data Science 101 reading materials.", PostAttachment = "http://example.com/reading.pdf", ClassroomId = 2},
-        new Post {PostId = 4, SenderName = "Dana White", PostDescription = "Machine Learning for Beginners resources.", PostAttachment = "http://example.com/resources.pdf", ClassroomId = 3}
-    };
-
     private IEnumerable<Post> filteredPosts;
     private Dictionary<int, List<Comment>> comments = new Dictionary<int, List<Comment>>();
     private Dictionary<int, string> newCommentInputs = new Dictionary<int, string>(); // Dictionary to hold new comment inputs
 
-    protected override void OnParametersSet()
+// Inside your Blazor component code
+    protected override async Task OnParametersSetAsync()
     {
-        filteredPosts = posts.Where(p => p.ClassroomId == CourseId);
+        // Retrieve posts from the server based on the course ID
+        filteredPosts = await Http.GetFromJsonAsync<IEnumerable<Post>>($"api/Post/Classroom/{CourseId}");
 
-        // Initialize comments dictionary with empty lists for each post
-        foreach (var post in filteredPosts)
+        if (filteredPosts != null)
         {
-            comments[post.PostId] = new List<Comment>();
-            newCommentInputs[post.PostId] = ""; // Initialize new comment input for each post
+            // Initialize comments dictionary with empty lists for each post
+            foreach (var post in filteredPosts)
+            {
+                comments[post.PostId] = new List<Comment>();
+                newCommentInputs[post.PostId] = ""; // Initialize new comment input for each post
+
+                try
+                {
+                    // Retrieve comments for each post from the server
+                    var fetchedComments = await Http.GetFromJsonAsync<IEnumerable<Comment>>($"api/Comment/Classroom/{CourseId}/{post.PostId}");
+
+                    if (fetchedComments != null)
+                    {
+                        // Add fetched comments to the comments dictionary
+                        foreach (var comment in fetchedComments)
+                        {
+                            comments[post.PostId].Add(comment);
+                        }
+                    }
+                }
+                catch (HttpRequestException ex)
+                {
+                    // Handle the case where comments are not found for a post
+                    // For example, you can log the error or handle it gracefully
+                    Console.WriteLine($"Error fetching comments for post {post.PostId}: {ex.Message}");
+                }
+
+            }
         }
-
-        // Add sample comments to existing posts
-        comments[1].AddRange(new List<Comment>
-        {
-            new Comment { CommentId = 1, PostId = 1, ClassroomId = 1, SenderName = "Eve Johnson", SenderComment = "Looking forward to working on this assignment!" },
-            new Comment { CommentId = 2, PostId = 1, ClassroomId = 1, SenderName = "Chris Lee", SenderComment = "Thanks for sharing the guidelines." }
-        });
-
     }
 
-    private void AddPost()
+    async Task AddPostAsync()
     {
         if (!string.IsNullOrWhiteSpace(newPostDescription))
         {
-            var newPostId = posts.Max(p => p.PostId) + 1; // Generate a new ID for the post
-            posts.Add(new Post {PostId = newPostId, SenderName = "System", PostDescription = newPostDescription, PostAttachment = newPostAttachment, ClassroomId = CourseId, IsSubmissionPost = isSubmissionPost});
-            
-            // Refresh the filtered posts to include the new post
-            filteredPosts = posts.Where(p => p.ClassroomId == CourseId).OrderByDescending(p => p.PostId);
+            var newPost = new Post
+            {
+                SenderName = UserService.GetLoggedInUser().Name,
+                PostDescription = newPostDescription,
+                PostAttachment = newPostAttachment,
+                ClassroomId = CourseId,
+                IsSubmissionPost = isSubmissionPost
+            };
 
-            // Initialize comment list for the new post
-            comments[newPostId] = new List<Comment>();
-            newCommentInputs[newPostId] = ""; // Initialize new comment input for the new post
+            // Post the new post to the server
+            var response = await Http.PostAsJsonAsync("api/Post", newPost);
+            if (response.IsSuccessStatusCode)
+            {
+                // Refresh the posts after adding the new post
+                await OnParametersSetAsync();
+            }
+            else
+            {
+                // Handle error if the post request fails
+            }
         }
     }
 
@@ -371,25 +399,68 @@ else
         // Redirect to the submission page passing the submissionPost information
         NavigationManager.NavigateTo($"/submit/{submissionPost.PostId}");
     }
-    
-    private void AddComment(int postId)
+
+    private async Task AddCommentAsync(int postId, string commentContent)
     {
-        if (comments.ContainsKey(postId) && !string.IsNullOrWhiteSpace(newCommentInputs[postId]))
+        try
         {
-            var newCommentId = comments[postId].Any() ? comments[postId].Max(c => c.CommentId) + 1 : 1;
-            var newComment = new Comment { CommentId = newCommentId, PostId = postId, ClassroomId = CourseId, SenderName = "User", SenderComment = newCommentInputs[postId] };
+            // Create a new Comment object
+            var newComment = new Comment
+            {
+                PostId = postId,
+                ClassroomId = CourseId,
+                SenderName = UserService.GetLoggedInUser().Name,
+                SenderComment = commentContent
+            };
 
-            // Add the new comment directly to the post
-            comments[postId].Add(newComment);
+            // Post the new comment to the server
+            var response = await Http.PostAsJsonAsync("api/Comment", newComment);
+        
+            // Check if the request was successful
+            if (response.IsSuccessStatusCode)
+            {
+                // Refresh the comments after adding the new comment
+                await FetchCommentsForPostAsync(postId);
+            }
+            else
+            {
+                // Handle the case where the POST request fails
+                // For example, you can log the error or display an error message to the user
+            }
+        }
+        catch (Exception ex)
+        {
+            // Handle any other exceptions that may occur
+            // For example, you can log the error or display an error message to the user
+        }
+    }
 
-            // Clear the input field after adding the comment
-            newCommentInputs[postId] = "";
+    private async Task FetchCommentsForPostAsync(int postId)
+    {
+        try
+        {
+            // Retrieve comments for the specified post from the server
+            var fetchedComments = await Http.GetFromJsonAsync<IEnumerable<Comment>>($"api/Comment/Classroom/{CourseId}/{postId}");
 
-            // Refresh the UI
-            StateHasChanged();
+            // Update the comments dictionary with the fetched comments
+            if (fetchedComments != null)
+            {
+                comments[postId] = fetchedComments.ToList();
+            }
+            else
+            {
+                // Clear the comments list if no comments were fetched
+                comments[postId].Clear();
+            }
+        }
+        catch (Exception ex)
+        {
+            // Handle any exceptions that may occur while fetching comments
+            // For example, you can log the error or display an error message to the user
         }
     }
 }
+
 
 
 

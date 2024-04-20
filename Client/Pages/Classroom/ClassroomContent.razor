@@ -1,5 +1,6 @@
 @page "/classroom/{CourseId:int}"
 @inject NavigationManager NavigationManager;
+@using ULMS.Shared.Models
 
 <style>
     /* Post Creation Form Styles */
@@ -370,26 +371,7 @@ else
         // Redirect to the submission page passing the submissionPost information
         NavigationManager.NavigateTo($"/submit/{submissionPost.PostId}");
     }
-
-    public class Post
-    {
-        public int PostId { get; set; }
-        public string SenderName { get; set; }
-        public string PostDescription { get; set; }
-        public string PostAttachment { get; set; }
-        public int ClassroomId { get; set; }
-        public bool IsSubmissionPost { get; set; } // Indicates if the post is a submission post
-    }
-
-    public class Comment
-    {
-        public int CommentId { get; set; }
-        public int PostId { get; set; }
-        public int ClassroomId { get; set; }
-        public string SenderName { get; set; }
-        public string SenderComment { get; set; }
-    }
-
+    
     private void AddComment(int postId)
     {
         if (comments.ContainsKey(postId) && !string.IsNullOrWhiteSpace(newCommentInputs[postId]))

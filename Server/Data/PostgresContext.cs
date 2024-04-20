@@ -29,6 +29,8 @@ public partial class PostgresContext : DbContext
 
     public virtual DbSet<Classroom> Classrooms { get; set; }
 
+    public virtual DbSet<Comment> Comments { get; set; }
+
     public virtual DbSet<DecryptedSecret> DecryptedSecrets { get; set; }
 
     public virtual DbSet<FlowState> FlowStates { get; set; }
@@ -48,6 +50,8 @@ public partial class PostgresContext : DbContext
     public virtual DbSet<Object> Objects { get; set; }
 
     public virtual DbSet<Pastpaper> Pastpapers { get; set; }
+
+    public virtual DbSet<Post> Posts { get; set; }
 
     public virtual DbSet<Presence> Presences { get; set; }
 
@@ -229,6 +233,21 @@ public partial class PostgresContext : DbContext
                 .HasColumnName("classroom_id");
             entity.Property(e => e.UserId).HasColumnName("user_id");
             entity.Property(e => e.ClassroomName).HasColumnName("classroom_name");
+        });
+
+        modelBuilder.Entity<Comment>(entity =>
+        {
+            entity.HasKey(e => new { e.CommentId, e.PostId, e.ClassroomId }).HasName("comment_pkey");
+
+            entity.ToTable("comment");
+
+            entity.Property(e => e.CommentId)
+                .ValueGeneratedOnAdd()
+                .HasColumnName("comment_id");
+            entity.Property(e => e.PostId).HasColumnName("post_id");
+            entity.Property(e => e.ClassroomId).HasColumnName("classroom_id");
+            entity.Property(e => e.SenderComment).HasColumnName("sender_comment");
+            entity.Property(e => e.SenderName).HasColumnName("sender_name");
         });
 
         modelBuilder.Entity<DecryptedSecret>(entity =>
@@ -470,6 +489,22 @@ public partial class PostgresContext : DbContext
             entity.Property(e => e.CourseId).HasColumnName("course_id");
             entity.Property(e => e.FileName).HasColumnName("file_name");
             entity.Property(e => e.Url).HasColumnName("url");
+        });
+
+        modelBuilder.Entity<Post>(entity =>
+        {
+            entity.HasKey(e => new { e.PostId, e.ClassroomId }).HasName("post_pkey");
+
+            entity.ToTable("post");
+
+            entity.Property(e => e.PostId)
+                .ValueGeneratedOnAdd()
+                .HasColumnName("post_id");
+            entity.Property(e => e.ClassroomId).HasColumnName("classroom_id");
+            entity.Property(e => e.IsSubmissionPost).HasColumnName("is_submission_post");
+            entity.Property(e => e.PostAttachment).HasColumnName("post_attachment");
+            entity.Property(e => e.PostDescription).HasColumnName("post_description");
+            entity.Property(e => e.SenderName).HasColumnName("sender_name");
         });
 
         modelBuilder.Entity<Presence>(entity =>

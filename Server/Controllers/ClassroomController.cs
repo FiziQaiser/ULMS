@@ -110,9 +110,56 @@ public class ClassroomController : ControllerBase
 
         return NoContent();
     }
+    
+    // GET: api/Classroom/Users/{classroomId}
+    [HttpGet("Users/{classroomId}")]
+    public async Task<ActionResult<IEnumerable<long>>> GetUserIdsByClassroomId(long classroomId)
+    {
+        var userIds = await _context.Classrooms
+            .Where(c => c.ClassroomId == classroomId)
+            .Select(c => c.UserId)
+            .ToListAsync();
+    
+        if (!userIds.Any())
+        {
+            return NotFound();
+        }
+    
+        return userIds;
+    }
+
 
     private bool ClassroomExists(long id)
     {
         return _context.Classrooms.Any(e => e.ClassroomId == id);
     }
+    
+// GET: api/Classroom/Users/{classroomId}
+    // [HttpGet("Users/{classroomId}")]
+    // public async Task<ActionResult<IEnumerable<(long UserId, string UserName)>>> GetUsersByClassroomId(long classroomId)
+    // {
+    //     var classroom = await _context.Classrooms.FindAsync(classroomId);
+    //     if (classroom == null)
+    //     {
+    //         return NotFound();
+    //     }
+    //
+    //     var users = await _context.Accounts
+    //         .Where(a => _context.Classrooms.Any(c => c.ClassroomId == classroomId && c.UserId == a.Id))
+    //         .Select(a => new { UserId = a.Id, UserName = a.Name })
+    //         .ToListAsync();
+    //
+    //     if (users.Any())
+    //     {
+    //         var userDetails = users.Select(u => (UserId: u.UserId, UserName: u.UserName)).ToList();
+    //         return userDetails;
+    //     }
+    //     else
+    //     {
+    //         return NotFound();
+    //     }
+    // }
+
+
+
 }

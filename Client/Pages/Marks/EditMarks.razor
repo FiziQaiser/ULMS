@@ -1,0 +1,232 @@
+@page "/editmarks/{ClassroomID:int}/{UserID:int}"
+@using ULMS.Shared.Models
+@inject NavigationManager NavigationManager;
+@inject HttpClient HttpClient
+@inject IJSRuntime JSRuntime
+
+
+<div class="marks-container">
+    <h3 class="marks-title">Edit Marks</h3>
+    <button @onclick="NavigateBack" class="btn btn-secondary">Back</button>
+
+    <!-- Quiz table -->
+    <div class="submission-section">
+        @if (quizSubmissions != null && quizSubmissions.Count > 0)
+        {
+            <h4>Quiz</h4>
+            <table class="submission-table">
+                <thead>
+                    <tr>
+                        <th>Submission #</th>
+                        <th>Marks</th>
+                        <th>Edit</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var (index, quizSubmission) in quizSubmissions.Select((submission, index) => (index, submission)))
+                    {
+                        <tr>
+                            <td>@(index + 1)</td>
+                            <td>@(quizSubmission.SubmissionMarks.HasValue ? quizSubmission.SubmissionMarks.ToString() : "NA")</td>
+                            <td><button @onclick="@(() => EditSubmission(quizSubmission))" class="btn btn-primary">Edit</button></td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+        else
+        {
+            <div class="submission-section">
+                <h4>Quiz</h4>
+                <table class="submission-table">
+                    <thead>
+                        <tr>
+                            <th>Submission #</th>
+                            <th>Marks</th>
+                            <th>Edit</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td colspan="3">Submission is Not Available</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+
+    <!-- Assignment table -->
+    <div class="submission-section">
+        @if (assignmentSubmissions != null && assignmentSubmissions.Count > 0)
+        {
+            <h4>Assignment</h4>
+            <table class="submission-table">
+                <thead>
+                    <tr>
+                        <th>Submission #</th>
+                        <th>Marks</th>
+                        <th>Edit</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var (index, assignmentSubmission) in assignmentSubmissions.Select((submission, index) => (index, submission)))
+                    {
+                        <tr>
+                            <td>@(index + 1)</td>
+                            <td>@(assignmentSubmission.SubmissionMarks.HasValue ? assignmentSubmission.SubmissionMarks.ToString() : "NA")</td>
+                            <td><button @onclick="@(() => EditSubmission(assignmentSubmission))" class="btn btn-primary">Edit</button></td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+        else
+        {
+            <div class="submission-section">
+                <h4>Assignment</h4>
+                <table class="submission-table">
+                    <thead>
+                        <tr>
+                            <th>Submission #</th>
+                            <th>Marks</th>
+                            <th>Edit</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td colspan="3">Submission is Not Available</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+
+    <!-- Project table -->
+    <div class="submission-section">
+        @if (projectSubmissions != null && projectSubmissions.Count > 0)
+        {
+            <h4>Project</h4>
+            <table class="submission-table">
+                <thead>
+                    <tr>
+                        <th>Submission #</th>
+                        <th>Marks</th>
+                        <th>Edit</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var (index, projectSubmission) in projectSubmissions.Select((submission, index) => (index, submission)))
+                    {
+                        <tr>
+                            <td>@(index + 1)</td>
+                            <td>@(projectSubmission.SubmissionMarks.HasValue ? projectSubmission.SubmissionMarks.ToString() : "NA")</td>
+                            <td><button @onclick="@(() => EditSubmission(projectSubmission))" class="btn btn-primary">Edit</button></td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+        else
+        {
+            <div class="submission-section">
+                <h4>Project</h4>
+                <table class="submission-table">
+                    <thead>
+                        <tr>
+                            <th>Submission #</th>
+                            <th>Marks</th>
+                            <th>Edit</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td colspan="3">Submission is Not Available</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter] 
+    public int ClassroomID { get; set; }
+    
+    [Parameter] 
+    public int UserID { get; set; }
+    
+    private List<Submission> submissions;
+    private List<Submission> quizSubmissions;
+    private List<Submission> assignmentSubmissions;
+    private List<Submission> projectSubmissions;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            submissions = await HttpClient.GetFromJsonAsync<List<Submission>>($"api/Submission/Classroom/{ClassroomID}/{UserID}");
+
+            if (submissions != null)
+            {
+                quizSubmissions = submissions.Where(s => s.SubmissionType == "Quiz").ToList();
+                assignmentSubmissions = submissions.Where(s => s.SubmissionType == "Assignment").ToList();
+                projectSubmissions = submissions.Where(s => s.SubmissionType == "Project").ToList();
+            }
+        }
+        catch (Exception ex)
+        {
+            // Handle the exception here, such as logging or displaying an error message.
+            Console.WriteLine($"An error occurred: {ex.Message}");
+        }
+    }
+    
+    private void NavigateBack()
+    {
+        NavigationManager.NavigateTo($"/studentslist/{ClassroomID}");
+    }
+    
+    private async Task EditSubmission(Submission submission)
+    {
+        try
+        {
+            // Prompt the instructor to enter new marks
+            var newMarksString = await JSRuntime.InvokeAsync<string>("prompt", "Enter new marks:");
+
+            // Parse the entered marks string to an integer
+            if (int.TryParse(newMarksString, out int newMarks))
+            {
+                // Update the marks of the selected submission
+                submission.SubmissionMarks = newMarks;
+
+                // Send a PUT request to update the submission marks
+                var response = await HttpClient.PutAsJsonAsync($"api/Submission/{submission.SubmissionId}", submission);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    // Marks updated successfully
+                    // You may want to reload the submissions table to reflect the changes
+                    Console.WriteLine("Submission marks updated successfully.");
+                }
+                else
+                {
+                    // Handle the case where the PUT request fails
+                    Console.WriteLine("Failed to update submission marks.");
+                }
+            }
+            else
+            {
+                // Display an error message if the entered marks are not valid
+                Console.WriteLine("Invalid marks entered.");
+            }
+        }
+        catch (Exception ex)
+        {
+            // Handle error scenario
+            Console.WriteLine($"Error updating submission marks: {ex.Message}");
+        }
+    }
+
+}

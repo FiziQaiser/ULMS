@@ -1,0 +1,70 @@
+.marks-container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+    position: relative;
+}
+
+.marks-title {
+    display: inline-block;
+    margin-right: 20px;
+}
+
+.btn-secondary {
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    position: absolute;
+    top: 0;
+    right: 0;
+}
+
+.btn-secondary:hover {
+    background-color: #5a6268;
+}
+
+.submission-section {
+    margin-bottom: 30px;
+}
+
+.submission-table {
+    width: 100%;
+    border-collapse: collapse;
+    border-radius: 5px;
+    overflow: hidden;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+    background-color: #fff;
+}
+
+.submission-table th, .submission-table td {
+    padding: 12px 15px;
+    border-bottom: 1px solid #ddd;
+}
+
+.submission-table th {
+    background-color: #f8f8f8;
+    font-weight: bold;
+}
+
+.submission-table td {
+    font-size: 14px;
+}
+
+.submission-table tbody tr:hover {
+    background-color: #f9f9f9;
+}
+
+@media (max-width: 768px) {
+    .marks-container {
+        padding: 20px 10px;
+    }
+
+    .btn-secondary {
+        position: static;
+        margin-top: 20px;
+    }
+}

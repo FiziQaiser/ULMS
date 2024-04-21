@@ -17,6 +17,22 @@ namespace ULMS.API.Controllers
         {
             _context = context;
         }
+        
+        // GET: api/Submission/Classroom/{classroomId}/{userId}
+        [HttpGet("Classroom/{classroomId}/{userId}")]
+        public async Task<ActionResult<IEnumerable<Submission>>> GetSubmissionsByClassroomIdAndUserId(long classroomId, long userId)
+        {
+            var submissions = await _context.Submissions
+                .Where(s => s.ClassroomId == classroomId && s.StudentId == userId)
+                .ToListAsync();
+
+            if (!submissions.Any())
+            {
+                return NotFound();
+            }
+
+            return submissions;
+        }
 
         // POST: api/Submission
         [HttpPost]

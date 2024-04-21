@@ -73,8 +73,21 @@ div.new-post-form button:hover {
     padding: 12px 20px;
     border-bottom: 1px solid #e0e0e0;
     display: flex;
-    justify-content: space-between;
+    align-items: center; /* Align sender's initial and name vertically */
+}
+
+/* Sender's initial inside a circle */
+.sender-initial {
+    width: 30px; /* Set width and height for the circle */
+    height: 30px;
+    border-radius: 50%; /* Make it a circle */
+    background-color: #007bff; /* Example color, change as needed */
+    color: white; /* Text color */
+    font-size: 16px; /* Font size */
+    display: flex;
+    justify-content: center;
     align-items: center;
+    margin-right: 10px; /* Add margin to separate from sender's name */
 }
 
 .post-card-header h5 {
@@ -93,24 +106,181 @@ div.new-post-form button:hover {
     margin: 0;
     line-height: 1.6;
     color: #555;
+    padding: 10px; /* Add padding to the post description */
 }
 
-
 /* Post card attachment link */
-.post-card-attachment {
+.attachment-button,
+.submission-button {
+    display: inline-block;
+    background-color: #007bff; /* Default blue background color */
+    color: #ffffff;
+    padding: 6px 12px;
+    text-decoration: none;
+    font-size: 14px;
+    border: none; /* Remove border */
+    border-radius: 4px; /* Add border-radius */
+    margin-right: 10px; /* Add margin between buttons */
+}
+
+.attachment-button:hover,
+.submission-button:hover {
+    background-color: #0056b3; /* Darker blue color on hover */
+    color: #000000; /* Change text color to black on hover */
+}
+
+/* Submission button */
+.submission-button {
+    background-color: #28a745; /* Green background color for submission button */
+}
+
+.submission-button:hover {
+    background-color: #218838; /* Darker green color on hover */
+}
+
+/* Toggle switch styles */
+.toggle-container {
+    display: flex;
+    align-items: center;
+}
+
+.toggle-label {
+    margin-right: 10px;
+}
+
+.toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 40px;
+    height: 20px;
+}
+
+.toggle-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    border-radius: 20px;
+    transition: .4s;
+}
+
+.toggle-slider:before {
+    position: absolute;
+    content: "";
+    height: 16px;
+    width: 16px;
+    left: 2px;
+    bottom: 2px;
+    background-color: white;
+    border-radius: 50%;
+    transition: .4s;
+}
+
+input[type="checkbox"] {
+    display: none;
+}
+
+input[type="checkbox"]:checked + .toggle-slider {
+    background-color: #2196F3;
+}
+
+input[type="checkbox"]:checked + .toggle-slider:before {
+    transform: translateX(20px);
+}
+
+/* Submission type dropdown menu */
+.submission-options {
+    display: flex;
+    align-items: center;
     margin-top: 10px;
 }
 
-.post-card-attachment a {
-    display: inline-block;
-    background-color: #007bff;
-    color: #ffffff;
-    padding: 6px 12px;
+.submission-options label {
+    margin-right: 10px;
+}
+
+.submission-options select {
+    padding: 6px;
     border-radius: 4px;
-    text-decoration: none;
+}
+
+/*Comment card styles */
+.comment-card {
+    background-color: #f0f0f0;
+    padding: 10px;
+    border-radius: 4px;
+    margin-bottom: 5px;
+    display: flex; /* Ensure elements are displayed in a row */
+    align-items: center; /* Align items vertically */
+}
+
+.comment-card p {
+    margin: 0;
+}
+
+/* Comment container */
+.comment-container {
+    margin-top: 20px; /* Add margin between comments and post description */
+    padding-top: 20px; /* Add padding to the top */
+    border-top: 1px solid #e0e0e0; /* Add border on top to separate comments from post description */
+}
+
+.comment-container .comment-card:first-child {
+    margin-top: 0; /* Remove margin from the first comment */
+}
+
+.comment-container .comment-card {
+    background-color: #f0f0f0;
+    padding: 10px;
+    border-radius: 4px;
+    margin-bottom: 10px; /* Adjust margin between comments */
+    display: flex; /* Ensure elements are displayed in a row */
+    align-items: center; /* Align items vertically */
+}
+
+.comment-container .comment-card p {
+    margin: 0;
+}
+
+/* New comment box styles */
+.new-comment-box {
+    margin-top: 15px;
+    padding: 10px; /* Add padding */
+    display: flex; /* Ensure elements are displayed in a row */
+    align-items: center; /* Align items vertically */
+}
+
+.new-comment-box input[type="text"] {
+    flex: 1; /* Take up remaining space */
+    min-width: 0; /* Allow input to shrink */
+    padding: 10px; /* Adjust padding */
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    box-sizing: border-box;
+    margin-right: 10px;
+}
+
+.new-comment-box button.add-comment-button {
+    padding: 10px 15px; /* Adjust padding */
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
     font-size: 14px;
 }
 
-.post-card-attachment a:hover {
+.new-comment-box button.add-comment-button:hover {
     background-color: #0056b3;
 }
+
+/* Adjust the position of the back button */
+.back-button1 {
+    float: right; /* Align the button to the right */
+    margin-left: auto; /* Move the button to the far right */
+    margin-bottom: 10px; /* Add margin to separate from the title */
+}
+

@@ -6,13 +6,13 @@
 @inject IJSRuntime JSRuntime
 
 <div class="post-card">
-    <h3>Submit Work</h3>
 
     @if (submissionPost != null)
     {
         <div class="post-info">
             <h4>Post Description:</h4>
             <p style="text-align: left;">@submissionPost.PostDescription</p>
+            <button @onclick="NavigateBack" class="back-button">Back</button>
         </div>
 
         @if (UserService.GetLoggedInUser().Role == "Instructor")
@@ -38,7 +38,8 @@
                                 <td>@submission.StudentName</td>
                                 <td>@submission.SubmissionMarks</td>
                                 <td><button @onclick="() => EditMarks(submission)" class="edit-button">Edit</button></td>
-                                <td><button @onclick="() => ViewSubmission(submission)" class="view-button">View</button></td>
+                                <td><a href="@submission.SubmissionUrl" target="_blank" class="view-button">View</a></td>
+                                
                             </tr>
                         }
                         </tbody>
@@ -49,6 +50,8 @@
 
         @if (UserService.GetLoggedInUser().Role == "Student")
         {
+            <h3>Submission</h3>
+
             @if (userHasSubmittedWork)
             {
                 <div class="alert alert-success" role="alert">
@@ -90,6 +93,12 @@
         await CheckUserSubmission();
     }
 
+    private void NavigateBack()
+    {
+        // Navigate back to the classroom page using NavigationManager
+        NavigationManager.NavigateTo($"/classroom/{ClassroomId}");
+    }
+    
     async Task LoadSubmissionPost()
     {
         try
@@ -283,168 +292,6 @@
             Console.WriteLine("Selected submission not found.");
         }
     }
-
-
-    private void ViewSubmission(Submission submission)
-    {
-        // Redirect to the page to view the submission
-        NavigationManager.NavigateTo($"/submission/{submission.ClassroomId}/{submission.PostId}");
-    }
+    
     
 }
-
-<style>
-    .post-card {
-        background-color: #fff;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        transition: box-shadow 0.3s ease-in-out;
-        border-radius: 10px;
-        padding: 20px;
-    }
-
-    .post-card:hover {
-        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
-    }
-
-    .post-info {
-        margin-bottom: 15px;
-    }
-
-    .post-info h4 {
-        margin-bottom: 5px;
-        color: #333;
-    }
-
-    .post-info p {
-        color: #555;
-    }
-
-    .submission-form {
-        margin-top: 20px;
-        padding: 15px;
-        border: 1px solid #dee2e6;
-        border-radius: 5px;
-        background-color: #f8f9fa;
-    }
-
-    .submission-form h4 {
-        margin-bottom: 15px;
-        color: #333;
-    }
-
-    .submission-form div {
-        margin-bottom: 10px;
-    }
-
-    .submission-form label {
-        display: block;
-        margin-bottom: 5px;
-        font-weight: bold;
-        color: #555;
-    }
-
-    .submission-form input[type="text"] {
-        width: 100%;
-        padding: 8px;
-        border: 1px solid #ced4da;
-        border-radius: 4px;
-        box-sizing: border-box;
-    }
-
-    .submission-form button {
-        display: inline-block;
-        padding: 10px 20px;
-        background-color: #007bff;
-        color: white;
-        border: none;
-        border-radius: 4px;
-        cursor: pointer;
-        font-size: 16px;
-    }
-
-    .submission-form button:hover {
-        background-color: #0056b3;
-    }
-
-    .alert {
-        margin-top: 20px;
-        padding: 15px;
-        border-radius: 5px;
-        background-color: #d4edda;
-        color: #155724;
-        border: 1px solid #c3e6cb;
-    }
-
-    .btn-unsubmit {
-        background-color: #dc3545;
-        color: white;
-        border-color: #dc3545;
-    }
-
-    .btn-unsubmit:hover {
-        background-color: #c82333;
-        border-color: #bd2130;
-    }
-
-    .btn-view-attachment {
-        display: none;
-        padding: 10px 20px;
-        background-color: #007bff;
-        color: white;
-        border: none;
-        border-radius: 4px;
-        cursor: pointer;
-        font-size: 16px;
-    }
-
-    .btn-view-attachment:hover {
-        background-color: #0056b3;
-    }
-    .table-container {
-        overflow-x: auto;
-    }
-    
-    .submission-table {
-        width: 100%;
-        border-collapse: collapse;
-    }
-    
-    .submission-table th, .submission-table td {
-        padding: 8px;
-        border-bottom: 1px solid #ddd;
-        text-align: left;
-    }
-    
-    .submission-table th {
-        background-color: #f2f2f2;
-    }
-    
-    .view-button {
-        background-color: #007bff;
-        color: white;
-        border: none;
-        padding: 6px 12px;
-        cursor: pointer;
-        border-radius: 4px;
-    }
-    
-    .view-button:hover {
-        background-color: #0056b3;
-    }
-    
-    .edit-button {
-        background-color: #ffc107; /* Set background color */
-        color: #212529; /* Set text color */
-        border: 1px solid #ffc107; /* Set border color */
-        padding: 6px 12px; /* Adjust padding */
-        cursor: pointer;
-        border-radius: 4px;
-        transition: background-color 0.3s ease; /* Add transition effect */
-    }
-    
-    .edit-button:hover {
-        background-color: #e0a800; /* Change background color on hover */
-        border-color: #e0a800; /* Change border color on hover */
-    }
-
-</style>

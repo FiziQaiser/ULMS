@@ -91,8 +91,8 @@
         userClassrooms = await HttpClient.GetFromJsonAsync<List<ULMS.Shared.Models.Classroom>>($"api/classroom/user/{loggedInUserId}");
     }
 
-    private void NavigateToCourse(long courseId)
+    private void NavigateToCourse(long ClassroomID)
     {
-        NavigationManager.NavigateTo($"/classroom/{courseId}");
+        NavigationManager.NavigateTo($"/classroom/{ClassroomID}");
     }
 }

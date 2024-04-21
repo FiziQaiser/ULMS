@@ -1,262 +1,19 @@
-@page "/classroom/{CourseId:int}"
+@page "/classroom/{ClassroomID:int}"
 @inject NavigationManager NavigationManager;
 @using ULMS.Shared.Models
 @inject HttpClient Http
 @inject UserService UserService
 
-<style>
-    /* Post Creation Form Styles */
-    div.new-post-form {
-        margin-bottom: 20px;
-        padding: 15px;
-        border: 1px solid #dee2e6;
-        border-radius: 5px;
-        background-color: #f8f9fa;
-    }
-
-    div.new-post-form h4 {
-        margin-bottom: 15px;
-    }
-
-    div.new-post-form div {
-        margin-bottom: 10px;
-    }
-
-    div.new-post-form label {
-        display: block;
-        margin-bottom: 5px;
-        font-weight: bold;
-    }
-
-    div.new-post-form input[type="text"] {
-        width: 100%;
-        padding: 8px;
-        border: 1px solid #ced4da;
-        border-radius: 4px;
-        box-sizing: border-box;
-    }
-
-    div.new-post-form button {
-        display: inline-block;
-        padding: 10px 20px;
-        background-color: #007bff;
-        color: white;
-        border: none;
-        border-radius: 4px;
-        cursor: pointer;
-        font-size: 16px;
-    }
-
-    div.new-post-form button:hover {
-        background-color: #0056b3;
-    }
-
-    /* General post container styles */
-    .post-container {
-        display: flex;
-        flex-direction: column;
-        gap: 20px;
-        margin-top: 20px;
-    }
-
-    /* Individual post card styles */
-    .post-card {
-        background-color: #ffffff;
-        border: 1px solid #e0e0e0;
-        border-radius: 8px;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        overflow: hidden;
-        transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
-    }
-
-    .post-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 10px 15px rgba(0, 0, 0, 0.2);
-    }
-
-    /* Post card header */
-    .post-card-header {
-        background-color: #f8f9fa;
-        padding: 12px 20px;
-        border-bottom: 1px solid #e0e0e0;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-
-    .post-card-header h5 {
-        margin: 0;
-        font-size: 18px;
-        color: #333;
-    }
-
-    /* Post card body */
-    .post-card-body {
-        padding: 20px;
-    }
-
-    .post-card-body p {
-        text-align: left; /* Ensure text is aligned to the left */
-        margin: 0;
-        line-height: 1.6;
-        color: #555;
-    }
-
-
-    /* Post card attachment link */
-    .post-card-attachment {
-        margin-top: 10px;
-    }
-
-    .post-card-attachment a {
-        display: inline-block;
-        background-color: #007bff;
-        color: #ffffff;
-        padding: 6px 12px;
-        border-radius: 4px;
-        text-decoration: none;
-        font-size: 14px;
-    }
-
-    .post-card-attachment a:hover {
-        background-color: #0056b3;
-    }
-
-    /* Submission button */
-    .submission-button {
-        background-color: #28a745;
-        color: white;
-        border: none;
-        border-radius: 4px;
-        padding: 6px 12px;
-        text-decoration: none;
-        cursor: pointer;
-        font-size: 14px;
-    }
-
-    .submission-button:hover {
-        background-color: #218838;
-    }
-
-    /* Toggle switch styles */
-    .toggle-container {
-        display: flex;
-        align-items: center;
-    }
-
-    .toggle-label {
-        margin-right: 10px;
-    }
-
-    .toggle-switch {
-        position: relative;
-        display: inline-block;
-        width: 40px;
-        height: 20px;
-    }
-
-    .toggle-slider {
-        position: absolute;
-        cursor: pointer;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background-color: #ccc;
-        border-radius: 20px;
-        transition: .4s;
-    }
-
-    .toggle-slider:before {
-        position: absolute;
-        content: "";
-        height: 16px;
-        width: 16px;
-        left: 2px;
-        bottom: 2px;
-        background-color: white;
-        border-radius: 50%;
-        transition: .4s;
-    }
-
-    input[type="checkbox"] {
-        display: none;
-    }
-
-    input[type="checkbox"]:checked + .toggle-slider {
-        background-color: #2196F3;
-    }
-
-    input[type="checkbox"]:checked + .toggle-slider:before {
-        transform: translateX(20px);
-    }
-    
-    /* Submission type dropdown menu */
-    .submission-options {
-        display: flex;
-        align-items: center;
-        margin-top: 10px;
-    }
-
-    .submission-options label {
-        margin-right: 10px;
-    }
-
-    .submission-options select {
-        padding: 6px;
-        border-radius: 4px;
-    }
-
-    /* Comment card styles */
-    .comment-card {
-        background-color: #f0f0f0;
-        padding: 10px;
-        border-radius: 4px;
-        margin-bottom: 5px;
-        text-align: left; /* Align text to the left */
-    }
-
-    .comment-card p {
-        margin: 0;
-    }
-
-    /* New comment box styles */
-    .new-comment-box {
-        margin-top: 15px;
-    }
-
-    .new-comment-box input[type="text"] {
-        width: calc(100% - 100px); /* Adjust width as needed */
-        padding: 8px;
-        border: 1px solid #ced4da;
-        border-radius: 4px;
-        box-sizing: border-box;
-        margin-right: 10px;
-    }
-
-    .new-comment-box button.add-comment-button {
-        padding: 8px 15px;
-        background-color: #007bff;
-        color: white;
-        border: none;
-        border-radius: 4px;
-        cursor: pointer;
-        font-size: 14px;
-    }
-
-    .new-comment-box button.add-comment-button:hover {
-        background-color: #0056b3;
-    }
-</style>
-
-<h3>Classroom Posts for Course ID: @CourseId</h3>
 
 <!-- New Post Form -->
 <div class="new-post-form">
+    <!-- Back Button -->
+    <button @onclick="NavigateBack" class="back-button1">Back</button>
+    <!-- New Post Form Title -->
     <h4>Add a New Post</h4>
     <div>
         <label for="postDescription">Post Description:</label>
-        <input type="text" @bind="newPostDescription" id="postDescription" />
+        <input type="text" @bind="newPostDescription" id="postDescription"/>
     </div>
     <div>
         <label for="postAttachment">Post Attachment URL:</label>
@@ -264,6 +21,7 @@
     </div>
     @if (UserService.GetLoggedInUser().Role != "Student")
     {
+        <!-- Toggle and submission type dropdown menu -->
         <div class="toggle-container">
             <label class="toggle-label">Submission Post:</label>
             <label class="toggle-switch">
@@ -271,8 +29,6 @@
                 <span class="toggle-slider"></span>
             </label>
         </div>
-
-        <!-- Submission type dropdown menu -->
         @if (isSubmissionPost)
         {
             <div class="submission-options">
@@ -285,8 +41,11 @@
             </div>
         }
     }
+    <!-- Add Post Button -->
     <button @onclick="AddPostAsync">Add Post</button>
 </div>
+
+
 
 @if (filteredPosts != null && filteredPosts.Any())
 {
@@ -296,24 +55,24 @@
             <!-- Post card remains unchanged -->
             <div class="post-card">
                 <div class="post-card-header">
+                    <div class="sender-initial">@post.SenderName.Substring(0, 1)</div> <!-- Add sender's initial -->
                     <h5>@post.SenderName</h5>
                 </div>
                 <div class="post-card-body">
-                    <p>@post.PostDescription</p>
-                    @if (!string.IsNullOrEmpty(post.PostAttachment))
-                    {
-                        <div class="post-card-attachment">
-                            <a href="@post.PostAttachment">Attachment</a>
-                        </div>
-                    }
-                    
-                    <!-- View Submission button -->
-                    @if (post.IsSubmissionPost)
-                    {
-                        <div>
-                            <button @onclick="() => ViewSubmission(post)" class="submission-button">View Submission</button>
-                        </div>
-                    }
+                    <p><strong>@post.PostDescription</strong></p>
+                    <div class="button-container">
+                        @if (!string.IsNullOrEmpty(post.PostAttachment))
+                        {
+                            <div class="post-card-attachment">
+                                <a href="@post.PostAttachment" target="_blank" class="attachment-button">Attachment</a>
+                               @if (post.IsSubmissionPost)
+                                {
+                                    <button @onclick="() => ViewSubmission(post)" class="submission-button">View Submission</button>
+                                }
+                            </div>
+                        }
+ 
+                    </div>
                 </div>
 
                 <!-- Render comments here -->
@@ -322,7 +81,7 @@
                     {
                         @foreach (var comment in comments[post.PostId])
                         {
-                            <div class="comment-card">
+                            <div class="comment-card comment-left-align">
                                 <p><strong>@comment.SenderName:</strong> @comment.SenderComment</p>
                             </div>
                         }
@@ -347,9 +106,12 @@ else
     <p>No posts available for this classroom.</p>
 }
 
+
+
+
 @code {
     [Parameter]
-    public int CourseId { get; set; }
+    public int ClassroomID { get; set; }
 
     private string newPostDescription;
     private string newPostAttachment;
@@ -363,8 +125,9 @@ else
     // Inside your Blazor component code
     protected override async Task OnParametersSetAsync()
     {
+        
         // Retrieve posts from the server based on the course ID
-        filteredPosts = await Http.GetFromJsonAsync<IEnumerable<Post>>($"api/Post/Classroom/{CourseId}");
+        filteredPosts = await Http.GetFromJsonAsync<IEnumerable<Post>>($"api/Post/Classroom/{ClassroomID}");
 
         if (filteredPosts != null)
         {
@@ -377,7 +140,7 @@ else
                 try
                 {
                     // Retrieve comments for each post from the server
-                    var fetchedComments = await Http.GetFromJsonAsync<IEnumerable<Comment>>($"api/Comment/Classroom/{CourseId}/{post.PostId}");
+                    var fetchedComments = await Http.GetFromJsonAsync<IEnumerable<Comment>>($"api/Comment/Classroom/{ClassroomID}/{post.PostId}");
 
                     if (fetchedComments != null)
                     {
@@ -399,6 +162,11 @@ else
         }
     }
 
+    // Navigate back to the classroom page
+    private void NavigateBack()
+    {
+        NavigationManager.NavigateTo("/classroom");
+    }
     async Task AddPostAsync()
     {
         if (!string.IsNullOrWhiteSpace(newPostDescription))
@@ -408,7 +176,7 @@ else
                 SenderName = UserService.GetLoggedInUser().Name,
                 PostDescription = newPostDescription,
                 PostAttachment = newPostAttachment,
-                ClassroomId = CourseId,
+                ClassroomId = ClassroomID,
                 IsSubmissionPost = isSubmissionPost,
                 SubmissionType = selectedSubmissionType
             };
@@ -441,7 +209,7 @@ else
             var newComment = new Comment
             {
                 PostId = postId,
-                ClassroomId = CourseId,
+                ClassroomId = ClassroomID,
                 SenderName = UserService.GetLoggedInUser().Name,
                 SenderComment = commentContent
             };
@@ -473,7 +241,7 @@ else
         try
         {
             // Retrieve comments for the specified post from the server
-            var fetchedComments = await Http.GetFromJsonAsync<IEnumerable<Comment>>($"api/Comment/Classroom/{CourseId}/{postId}");
+            var fetchedComments = await Http.GetFromJsonAsync<IEnumerable<Comment>>($"api/Comment/Classroom/{ClassroomID}/{postId}");
 
             // Update the comments dictionary with the fetched comments
             if (fetchedComments != null)

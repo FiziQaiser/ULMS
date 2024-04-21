@@ -3,7 +3,7 @@
 @inject UserService UserService;
 @inject HttpClient HttpClient
 
-<PageTitle>Classroom</PageTitle>
+<PageTitle>Attendance</PageTitle>
 
 <style>
     .courses-container {
@@ -66,7 +66,7 @@
 </style>
 
 <div>
-    <h3>Classroom</h3>
+    <h3>Attendance</h3>
     <div class="courses-container">
         @foreach (var classroom in userClassrooms)
         {
@@ -93,7 +93,14 @@
 
     private void NavigateToCourse(long ClassroomID)
     {
-        NavigationManager.NavigateTo($"/attendance/{ClassroomID}");
+        if (UserService.GetLoggedInUser().Role == "Student")
+        {
+            NavigationManager.NavigateTo($"/attendance/{ClassroomID}");
+        }
+        else
+        {
+            NavigationManager.NavigateTo($"/attendanceinstructor/{ClassroomID}");
+        }
     }
 }
 

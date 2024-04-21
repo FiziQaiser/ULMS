@@ -13,20 +13,10 @@
 <div class="@NavMenuCssClass nav-scrollable" @onclick="ToggleNavMenu">
     <nav class="flex-column">
         <div class="nav-item px-3">
-            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
+            <NavLink class="nav-link" href="/dashboard" Match="NavLinkMatch.All">
                 <span class="oi oi-home" aria-hidden="true"></span> Home
             </NavLink>
         </div>
-        @* <div class="nav-item px-3"> *@
-        @*     <NavLink class="nav-link" href="counter"> *@
-        @*         <span class="oi oi-plus" aria-hidden="true"></span> Counter *@
-        @*     </NavLink> *@
-        @* </div> *@
-        @* <div class="nav-item px-3"> *@
-        @*     <NavLink class="nav-link" href="fetchdata"> *@
-        @*         <span class="oi oi-list-rich" aria-hidden="true"></span> Fetch data *@
-        @*     </NavLink> *@
-        @* </div> *@
         
         @if (UserService.GetLoggedInUser() != null && UserService.GetLoggedInUser().Role == "Admin")
         {
@@ -92,45 +82,45 @@
 
             <!-- More Student-specific links here -->
         }
-            else if (UserService.GetLoggedInUser().Role == "Instructor")
-            {
-                <div class="nav-item px-3">
-                    <NavLink class="nav-link" href="/instructordashboard">
-                        <span class="oi oi-book" aria-hidden="true"></span> Instructor Dashboard
-                    </NavLink>
-                </div>
-                <div class="nav-item px-3">
-                    <NavLink class="nav-link" href="/classroom">
-                        <span class="oi oi-book" aria-hidden="true"></span> Classroom
-                    </NavLink>
-                </div>
-                <div class="nav-item px-3">
-                    <NavLink class="nav-link" href="/marks">
-                        <span class="oi oi-bar-chart" aria-hidden="true"></span> Marks
-                    </NavLink>
-                </div>
-                <div class="nav-item px-3">
-                    <NavLink class="nav-link" href="/library">
-                        <span class="oi oi-globe" aria-hidden="true"></span> Library
-                    </NavLink>
-                </div>
-                <div class="nav-item px-3">
-                    <NavLink class="nav-link" href="/pastpaper">
-                        <span class="oi oi-folder" aria-hidden="true"></span> Past Papers
-                    </NavLink>
-                </div>
-                <div class="nav-item px-3">
-                    <NavLink class="nav-link" href="/instructorcalendar">
-                        <span class="oi oi-calendar" aria-hidden="true"></span> Calendar
-                    </NavLink>
-                </div>
-                <div class="nav-item px-3">
-                    <NavLink class="nav-link" href="/attendance">
-                        <span class="oi oi-check" aria-hidden="true"></span> Attendance
-                    </NavLink>
-                </div>
-                <!-- More Student-specific links here -->
-            }
+        else if (UserService.GetLoggedInUser().Role == "Instructor")
+        {
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="/classroom">
+                    <span class="oi oi-book" aria-hidden="true"></span> Classroom
+                </NavLink>
+            </div>
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="/marks">
+                    <span class="oi oi-bar-chart" aria-hidden="true"></span> Marks
+                </NavLink>
+            </div>
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="/library">
+                    <span class="oi oi-globe" aria-hidden="true"></span> Library
+                </NavLink>
+            </div>
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="/pastpaper">
+                    <span class="oi oi-folder" aria-hidden="true"></span> Past Papers
+                </NavLink>
+            </div>
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="/instructorcalendar">
+                    <span class="oi oi-calendar" aria-hidden="true"></span> Calendar
+                </NavLink>
+            </div>
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="/attendance">
+                    <span class="oi oi-check" aria-hidden="true"></span> Attendance
+                </NavLink>
+            </div>
+            <!-- More Student-specific links here -->
+        }
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="" @onclick="SignOut">
+                <span class="oi oi-account-logout" aria-hidden="true"></span> Sign Out
+            </NavLink>
+        </div>
     </nav>
 </div>
 
@@ -152,5 +142,11 @@
     private void HandleUserChanged(object sender, UserChangedEventArgs e)
     {
         StateHasChanged(); // Force component refresh
+    }
+    private void SignOut()
+    {
+        // Implement signout logic here
+        UserService.GetLoggedInUser().Role = null;
+        // You may also redirect the user to the login page or perform any additional actions
     }
 }

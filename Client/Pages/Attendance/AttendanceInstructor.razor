@@ -1,0 +1,205 @@
+@page "/attendanceinstructor/{ClassroomID:int}"
+@inject NavigationManager NavigationManager
+@inject HttpClient HttpClient
+@inject UserService UserService
+@using ULMS.Shared.Models
+
+<div class="marks-container">
+    <h4 class="marks-title">Attendance List</h4>
+    <input type="date" value="@SelectedDate" @onchange="OnDateSelected" style="padding: 8px; border-radius: 4px; border: 1px solid #ccc; font-size: 16px; margin-bottom: 10px;"/>
+    <button @onclick="NavigateBack" class="btn-secondary">Back</button>
+
+    <!-- Table to display attendance -->
+    <table class="submission-table">
+        <thead>
+            <tr>
+                <th style="text-align: center;">Student ID</th>
+                <th style="text-align: center;">Student Name</th>
+                <th style="text-align: center;">Date</th>
+                <th style="text-align: center;">Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (userDetails != null && userDetails.Any())
+            {
+                @foreach (var user in userDetails)
+                {
+                    @if (user.Role == "Student")
+                    {
+                        <tr>
+                            <td style="text-align: center;">@user.Id</td>
+                            <td style="text-align: center;">@user.Name</td>
+                            <td style="text-align: center;">@SelectedDate.ToString("dd-MM-yyyy")</td>
+                            <td style="text-align: center;">
+                                @{
+                                    try
+                                    {
+                                        var attendance = attendanceList.FirstOrDefault(a => a.StudentId == user.Id);
+                                        @if (attendance != null)
+                                        {
+                                            <select @onchange="e => UpdateStatus(attendance, e, user.Id)">
+                                                <option value="Present" selected="@(attendance.Status == "Present")">Present</option>
+                                                <option value="Absent" selected="@(attendance.Status == "Absent")">Absent</option>
+                                                <option value="Late" selected="@(attendance.Status == "Late")">Late</option>
+                                            </select>
+                                        }          
+                                        else
+                                        {
+                                            <select @onchange="e => UpdateStatus(attendance, e, user.Id)">
+                                                <option value="Present">Present</option>
+                                                <option value="Absent">Absent</option>
+                                                <option value="Late">Late</option>
+                                                <option value="NA" selected>NA</option>
+                                            </select>
+                                        }
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        Console.WriteLine($"Error retrieving attendance for student {user.Id}: {ex.Message}");
+                                        <select @onchange="e => UpdateStatus(null, e, user.Id)">
+                                            <option value="Present">Present</option>
+                                            <option value="Absent">Absent</option>
+                                            <option value="Late">Late</option>
+                                            <option value="NA" selected>NA</option>
+                                        </select>
+                                    }
+                                }
+                            </td>
+
+                        </tr>
+                    }
+                }
+            }
+            else
+            {
+                <tr>
+                    <td colspan="4" style="text-align: center;">No students found</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+
+@code {
+    [Parameter] public int ClassroomID { get; set; }
+    private DateTime SelectedDate = DateTime.Today; // Dummy date
+    private List<Account> userDetails;
+    private List<ULMS.Shared.Models.Attendance> attendanceList;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadAttendance();
+    }
+
+    private async Task LoadAttendance()
+    {
+        try
+        {
+            // Fetch user IDs and names for the given classroom ID
+            var userIds = await HttpClient.GetFromJsonAsync<List<long>>($"api/Classroom/Users/{ClassroomID}");
+            if (userIds != null && userIds.Any())
+            {
+                userDetails = new List<Account>();
+                foreach (var userId in userIds)
+                {
+                    var user = await HttpClient.GetFromJsonAsync<Account>($"/account/{userId}");
+                    if (user.Role == "Student")
+                    {
+                        userDetails.Add(user);
+                    }
+                }
+            }
+            if (userDetails != null && userDetails.Any())
+            {
+                // Fetch attendance records for the given classroom ID and selected date
+                string selectedDateString = SelectedDate.ToString("dd-MM-yyyy");
+                try
+                {
+                    // Fetch attendance records for the given classroom ID and selected date
+                    attendanceList = await HttpClient.GetFromJsonAsync<List<ULMS.Shared.Models.Attendance>>($"api/Attendance/Classroom/{ClassroomID}/Date/{selectedDateString}");
+                }
+                catch (Exception ex)
+                {
+                    // Handle exceptions
+                    Console.WriteLine($"Error fetching attendance: {ex.Message}");
+                    attendanceList = new List<ULMS.Shared.Models.Attendance>(); // Set attendanceList to an empty list
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            // Handle exceptions
+            Console.WriteLine($"Error: {ex.Message}");
+        }
+    }
+
+    private async Task OnDateSelected(ChangeEventArgs e)
+    {
+        if (DateTime.TryParse((string)e.Value, out DateTime selectedDate))
+        {
+            SelectedDate = selectedDate;
+            await LoadAttendance();
+        }
+    }
+
+    private void NavigateBack()
+    {
+        NavigationManager.NavigateTo("/attendance");
+    }
+    
+private async Task UpdateStatus(ULMS.Shared.Models.Attendance attendance, ChangeEventArgs e, long studentId)
+{
+    string newStatus = e.Value.ToString(); // Get the new status from the dropdown
+    
+    if (attendance == null)
+    {
+        // If attendance is null, create a new attendance object
+        attendance = new ULMS.Shared.Models.Attendance
+        {
+            ClassroomId = ClassroomID, // Assuming ClassroomID is accessible here
+            Date = SelectedDate.ToString("dd-MM-yyyy"), // Assuming SelectedDate is accessible here
+            StudentId = studentId, // Assuming studentId is accessible here
+            Status = newStatus // Set the new status
+        };
+        
+        // Make a POST request to create a new attendance record
+        try
+        {
+            // Send the new attendance object to the server
+            var response = await HttpClient.PostAsJsonAsync("api/Attendance", attendance);
+            response.EnsureSuccessStatusCode(); // Ensure success status code
+            Console.WriteLine($"Attendance record created successfully for student {attendance.StudentId}.");
+            
+            // Reload attendance list after creating the new record
+            await LoadAttendance();
+        }
+        catch (Exception ex)
+        {
+            // Handle exception
+            Console.WriteLine($"Error creating attendance record: {ex.Message}");
+        }
+    }
+    else
+    {
+        // If attendance exists, update the status
+        attendance.Status = newStatus; // Update the status in the attendance object
+        
+        // Make a PUT request to update the attendance record
+        try
+        {
+            // Send the updated attendance object to the server
+            var response = await HttpClient.PutAsJsonAsync($"api/Attendance/{attendance.AttendanceId}", attendance);
+            response.EnsureSuccessStatusCode(); // Ensure success status code
+            Console.WriteLine($"Attendance status updated successfully for student {attendance.StudentId}.");
+        }
+        catch (Exception ex)
+        {
+            // Handle exception
+            Console.WriteLine($"Error updating attendance status: {ex.Message}");
+        }
+    }
+}
+
+
+}

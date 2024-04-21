@@ -6,7 +6,7 @@
 
 
 <div class="login-form">
-    <h1>Login</h1>
+    <h1>EDU SYNC</h1>
     <div class="container">
         <div class="main">
             <div class="content">
@@ -60,22 +60,9 @@
             UserService.SetLoggedInUser(user);
             
             submissionMessage = "Login successful.";
-            // Redirect based on role
-            switch (user.Role)
-            {
-                case "Admin":
-                    NavigationManager.NavigateTo("/admindashboard");
-                    break;
-                case "Student":
-                    NavigationManager.NavigateTo("/studentdashboard");
-                    break;
-                case "Instructor":
-                    NavigationManager.NavigateTo("/instructordashboard");
-                    break;
-                default:
-                    NavigationManager.NavigateTo("/home");
-                    break;
-            }
+
+            NavigationManager.NavigateTo("/dashboard");
+
         }
         else
         {

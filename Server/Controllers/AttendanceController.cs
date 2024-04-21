@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -99,13 +100,13 @@ namespace ULMS.API.Controllers
         {
             return _context.Attendances.Any(e => e.AttendanceId == id);
         }
-        
-        // GET: api/Attendance/Classroom/{classroomId}/Student/{studentId}
-        [HttpGet("Classroom/{classroomId}/Student/{studentId}")]
-        public async Task<ActionResult<IEnumerable<Attendance>>> GetAttendanceByClassroomIdAndStudentId(long classroomId, long studentId)
+
+        // GET: api/Attendance/Classroom/{classroomId}
+        [HttpGet("Classroom/{classroomId}")]
+        public async Task<ActionResult<IEnumerable<Attendance>>> GetAttendanceByClassroomId(long classroomId)
         {
             var attendanceList = await _context.Attendances
-                .Where(a => a.ClassroomId == classroomId && a.StudentId == studentId)
+                .Where(a => a.ClassroomId == classroomId)
                 .ToListAsync();
 
             if (attendanceList == null || attendanceList.Count == 0)
@@ -115,6 +116,53 @@ namespace ULMS.API.Controllers
 
             return attendanceList;
         }
+        
+        // GET: api/Attendance/Classroom/{classroomId}/Date/{date}
+        [HttpGet("Classroom/{classroomId}/Student/{studentId}")]
+        public async Task<ActionResult<IEnumerable<Attendance>>> GetAttendanceByClassroomIdAndStudentID(long classroomId, long studentId)
+        {
+            var attendanceList = await _context.Attendances
+                .Where(a => a.ClassroomId == classroomId && a.StudentId == studentId)
+                .ToListAsync();
 
+            if (!attendanceList.Any())
+            {
+                return NotFound();
+            }
+
+            return attendanceList;
+        }
+        
+        // GET: api/Attendance/Classroom/{classroomId}/Date/{date}
+        [HttpGet("Classroom/{classroomId}/Date/{date}")]
+        public async Task<ActionResult<IEnumerable<Attendance>>> GetAttendanceByClassroomIdAndDate(long classroomId, string date)
+        {
+            var attendanceList = await _context.Attendances
+                .Where(a => a.ClassroomId == classroomId && a.Date == date)
+                .ToListAsync();
+
+            if (!attendanceList.Any())
+            {
+                return NotFound();
+            }
+
+            return attendanceList;
+        }
+        
+        // GET: api/Attendance/Classroom/{classroomId}/Date/{date}
+        [HttpGet("Classroom/{classroomId}/Date/{date}/Student/{studentId}")]
+        public async Task<ActionResult<IEnumerable<Attendance>>> GetAttendanceByClassroomIdAndDate(long classroomId, string date, long studentId)
+        {
+            var attendanceList = await _context.Attendances
+                .Where(a => a.ClassroomId == classroomId && a.Date == date && a.StudentId == studentId)
+                .ToListAsync();
+
+            if (!attendanceList.Any())
+            {
+                return NotFound();
+            }
+
+            return attendanceList;
+        }
     }
 }

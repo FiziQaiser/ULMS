@@ -17,6 +17,8 @@ public partial class PostgresContext : DbContext
 
     public virtual DbSet<Account> Accounts { get; set; }
 
+    public virtual DbSet<Attendance> Attendances { get; set; }
+
     public virtual DbSet<AuditLogEntry> AuditLogEntries { get; set; }
 
     public virtual DbSet<Book> Books { get; set; }
@@ -111,6 +113,19 @@ public partial class PostgresContext : DbContext
             entity.Property(e => e.Name).HasColumnName("name");
             entity.Property(e => e.Password).HasColumnName("password");
             entity.Property(e => e.Role).HasColumnName("role");
+        });
+
+        modelBuilder.Entity<Attendance>(entity =>
+        {
+            entity.HasKey(e => e.AttendanceId).HasName("attendance_pkey");
+
+            entity.ToTable("attendance");
+
+            entity.Property(e => e.AttendanceId).HasColumnName("attendance_id");
+            entity.Property(e => e.ClassroomId).HasColumnName("classroom_id");
+            entity.Property(e => e.Date).HasColumnName("date");
+            entity.Property(e => e.Status).HasColumnName("status");
+            entity.Property(e => e.StudentId).HasColumnName("student_id");
         });
 
         modelBuilder.Entity<AuditLogEntry>(entity =>

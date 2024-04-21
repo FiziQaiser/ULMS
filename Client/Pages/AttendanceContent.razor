@@ -1,0 +1,83 @@
+@page "/attendance/{ClassroomID:int}"
+@inject NavigationManager NavigationManager;
+@inject HttpClient HttpClient
+@inject UserService UserService;
+@using ULMS.Shared.Models
+
+<div class="marks-container">
+    <h4 class="marks-title">Attendance List</h4>
+    <button @onclick="NavigateBack" class="btn-secondary">Back to Courses</button>
+
+    <!-- Table to display attendance -->
+    <table class="submission-table">
+        <thead>
+            <tr>
+                <th style="text-align: center;">Date</th>
+                <th style="text-align: center;">Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (attendanceList != null && attendanceList.Any())
+            {
+                @foreach (var attendance in attendanceList)
+                {
+                    <tr>
+                        <td style="text-align: center;">@attendance.Date.ToString()</td>
+                        <td style="text-align: center;"><button class="status-button" style="@GetStatusButtonStyle(attendance.Status)">@attendance.Status</button></td>
+                    </tr>
+                }
+            }
+            else
+            {
+                <tr>
+                    <td colspan="2" style="text-align: center;">No attendance records available</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@code {
+    [Parameter] public int ClassroomID { get; set; }
+    private List<ULMS.Shared.Models.Attendance> attendanceList;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            // Fetch attendance records for the given classroom ID and logged user ID
+            var loggedUserId = UserService.GetLoggedInUser().Id;
+            attendanceList = await HttpClient.GetFromJsonAsync<List<ULMS.Shared.Models.Attendance>>($"api/Attendance/classroom/{ClassroomID}/Student/{loggedUserId}");
+        }
+        catch (Exception ex)
+        {
+            // Handle exceptions
+            Console.WriteLine($"Error: {ex.Message}");
+        }
+    }
+
+    private void NavigateBack()
+    {
+        NavigationManager.NavigateTo("/attendance");
+    }
+
+    private string GetStatusButtonStyle(string status)
+    {
+        return $"width: 120px; {GetStatusColor(status)} padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer;";
+    }
+
+    private string GetStatusColor(string status)
+    {
+        switch (status)
+        {
+            case "Present":
+                return "background-color: #4CAF50; color: white;";
+            case "Absent":
+                return "background-color: #f44336; color: white;";
+            case "Late":
+                return "background-color: #ffeb3b; color: black;";
+            default:
+                return string.Empty; // No specific style for other statuses
+        }
+    }
+}

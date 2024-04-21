@@ -11,7 +11,7 @@ public partial class Attendance
 
     public long? StudentId { get; set; }
 
-    public DateOnly? Date { get; set; }
+    public string Date { get; set; }
 
     public string? Status { get; set; }
 }

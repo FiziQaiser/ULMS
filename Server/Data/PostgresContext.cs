@@ -507,6 +507,7 @@ public partial class PostgresContext : DbContext
             entity.Property(e => e.PostAttachment).HasColumnName("post_attachment");
             entity.Property(e => e.PostDescription).HasColumnName("post_description");
             entity.Property(e => e.SenderName).HasColumnName("sender_name");
+            entity.Property(e => e.SubmissionType).HasColumnName("submission_type");
         });
 
         modelBuilder.Entity<Presence>(entity =>
@@ -743,6 +744,8 @@ public partial class PostgresContext : DbContext
             entity.Property(e => e.ClassroomId).HasColumnName("classroom_id");
             entity.Property(e => e.StudentId).HasColumnName("student_id");
             entity.Property(e => e.StudentName).HasColumnName("student_name");
+            entity.Property(e => e.SubmissionMarks).HasColumnName("submission_marks");
+            entity.Property(e => e.SubmissionType).HasColumnName("submission_type");
             entity.Property(e => e.SubmissionUrl).HasColumnName("submission_url");
         });
 

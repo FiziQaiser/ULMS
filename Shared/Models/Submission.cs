@@ -16,4 +16,8 @@ public partial class Submission
     public string? StudentName { get; set; }
 
     public string? SubmissionUrl { get; set; }
+
+    public string? SubmissionType { get; set; }
+
+    public long? SubmissionMarks { get; set; }
 }

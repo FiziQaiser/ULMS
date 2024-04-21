@@ -191,6 +191,22 @@
         transform: translateX(20px);
     }
     
+    /* Submission type dropdown menu */
+    .submission-options {
+        display: flex;
+        align-items: center;
+        margin-top: 10px;
+    }
+
+    .submission-options label {
+        margin-right: 10px;
+    }
+
+    .submission-options select {
+        padding: 6px;
+        border-radius: 4px;
+    }
+
     /* Comment card styles */
     .comment-card {
         background-color: #f0f0f0;
@@ -255,11 +271,22 @@
                 <span class="toggle-slider"></span>
             </label>
         </div>
+
+        <!-- Submission type dropdown menu -->
+        @if (isSubmissionPost)
+        {
+            <div class="submission-options">
+                <label for="submissionType">Submission Type:</label>
+                <select id="submissionType" @bind="selectedSubmissionType">
+                    <option value="Assignment">Assignment</option>
+                    <option value="Quiz">Quiz</option>
+                    <option value="Project">Project</option>
+                </select>
+            </div>
+        }
     }
     <button @onclick="AddPostAsync">Add Post</button>
 </div>
-
-
 
 @if (filteredPosts != null && filteredPosts.Any())
 {
@@ -327,12 +354,13 @@ else
     private string newPostDescription;
     private string newPostAttachment;
     private bool isSubmissionPost;
+    private string selectedSubmissionType = "Assignment";
 
     private IEnumerable<Post> filteredPosts;
     private Dictionary<int, List<Comment>> comments = new Dictionary<int, List<Comment>>();
     private Dictionary<int, string> newCommentInputs = new Dictionary<int, string>(); // Dictionary to hold new comment inputs
 
-// Inside your Blazor component code
+    // Inside your Blazor component code
     protected override async Task OnParametersSetAsync()
     {
         // Retrieve posts from the server based on the course ID
@@ -381,7 +409,8 @@ else
                 PostDescription = newPostDescription,
                 PostAttachment = newPostAttachment,
                 ClassroomId = CourseId,
-                IsSubmissionPost = isSubmissionPost
+                IsSubmissionPost = isSubmissionPost,
+                SubmissionType = selectedSubmissionType
             };
 
             // Post the new post to the server
@@ -401,7 +430,7 @@ else
     private void ViewSubmission(Post submissionPost)
     {
         // Redirect to the submission page passing the submissionPost information
-    NavigationManager.NavigateTo($"/submit/{submissionPost.ClassroomId}/{submissionPost.PostId}");
+        NavigationManager.NavigateTo($"/submit/{submissionPost.ClassroomId}/{submissionPost.PostId}");
     }
 
     private async Task AddCommentAsync(int postId, string commentContent)

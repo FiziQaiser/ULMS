@@ -16,4 +16,6 @@ public partial class Post
     public string? PostAttachment { get; set; }
 
     public bool IsSubmissionPost { get; set; }
+
+    public string? SubmissionType { get; set; }
 }

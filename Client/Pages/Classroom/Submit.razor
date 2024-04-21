@@ -3,6 +3,7 @@
 @inject NavigationManager NavigationManager
 @inject HttpClient Http
 @inject UserService UserService
+@inject IJSRuntime JSRuntime
 
 <div class="post-card">
     <h3>Submit Work</h3>
@@ -24,6 +25,8 @@
                         <tr>
                             <th>Student ID</th>
                             <th>Student Name</th>
+                            <th>Submission Marks</th>
+                            <th>Edit Marks</th>
                             <th>View Submission</th>
                         </tr>
                         </thead>
@@ -33,6 +36,8 @@
                             <tr>
                                 <td>@submission.StudentId</td>
                                 <td>@submission.StudentName</td>
+                                <td>@submission.SubmissionMarks</td>
+                                <td><button @onclick="() => EditMarks(submission)" class="edit-button">Edit</button></td>
                                 <td><button @onclick="() => ViewSubmission(submission)" class="view-button">View</button></td>
                             </tr>
                         }
@@ -41,7 +46,6 @@
                 </div>
             </div>
         }
-
 
         @if (UserService.GetLoggedInUser().Role == "Student")
         {
@@ -165,7 +169,8 @@
             PostId = PostId,
             StudentId = UserService.GetLoggedInUser().Id,
             StudentName = UserService.GetLoggedInUser().Name,
-            SubmissionUrl = submissionUrl
+            SubmissionUrl = submissionUrl,
+            SubmissionType = submissionPost.SubmissionType
         };
 
         try
@@ -225,28 +230,67 @@
         }
     }
 
+    private async Task EditMarks(Submission submission)
+    {
+        // Retrieve the student ID of the selected submission
+        var studentId = submission.StudentId;
+
+        // Fetch the corresponding submission from the server using classroom ID, post ID, and student ID
+        var selectedSubmission = submissions.FirstOrDefault(s => s.StudentId == studentId);
+
+        if (selectedSubmission != null)
+        {
+            // Prompt the instructor to enter new marks
+            var newMarksString = await JSRuntime.InvokeAsync<string>("prompt", "Enter new marks:");
+
+            // Parse the entered marks string to an integer
+            if (int.TryParse(newMarksString, out int newMarks))
+            {
+                // Update the marks of the selected submission
+                selectedSubmission.SubmissionMarks = newMarks;
+
+                try
+                {
+                    // Send a PUT request to update the submission marks
+                    var response = await Http.PutAsJsonAsync($"api/submission/{selectedSubmission.SubmissionId}", selectedSubmission);
+
+                    if (response.IsSuccessStatusCode)
+                    {
+                        // Marks updated successfully
+                        // You may want to reload the submissions table to reflect the changes
+                        await LoadSubmissions();
+                    }
+                    else
+                    {
+                        // Handle the case where the PUT request fails
+                        Console.WriteLine("Failed to update submission marks.");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    // Handle error scenario
+                    Console.WriteLine($"Error updating submission marks: {ex.Message}");
+                }
+            }
+            else
+            {
+                // Display an error message if the entered marks are not valid
+                Console.WriteLine("Invalid marks entered.");
+            }
+        }
+        else
+        {
+            Console.WriteLine("Selected submission not found.");
+        }
+    }
+
+
     private void ViewSubmission(Submission submission)
     {
         // Redirect to the page to view the submission
         NavigationManager.NavigateTo($"/submission/{submission.ClassroomId}/{submission.PostId}");
     }
-
-    public class Post
-    {
-        public int PostId { get; set; }
-        public string PostDescription { get; set; }
-        public string PostAttachment { get; set; }
-    }
-
-    public class Submission
-    {
-        public long SubmissionId { get; set; }
-        public long PostId { get; set; }
-        public long ClassroomId { get; set; }
-        public long StudentId { get; set; }
-        public string StudentName { get; set; }
-        public string SubmissionUrl { get; set; }
-    }
+    
 }
 
 <style>
@@ -386,6 +430,21 @@
     
     .view-button:hover {
         background-color: #0056b3;
+    }
+    
+    .edit-button {
+        background-color: #ffc107; /* Set background color */
+        color: #212529; /* Set text color */
+        border: 1px solid #ffc107; /* Set border color */
+        padding: 6px 12px; /* Adjust padding */
+        cursor: pointer;
+        border-radius: 4px;
+        transition: background-color 0.3s ease; /* Add transition effect */
+    }
+    
+    .edit-button:hover {
+        background-color: #e0a800; /* Change background color on hover */
+        border-color: #e0a800; /* Change border color on hover */
     }
 
 </style>

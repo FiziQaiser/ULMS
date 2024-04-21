@@ -118,6 +118,41 @@ namespace ULMS.API.Controllers
                 return StatusCode(500, $"An error occurred while deleting submissions: {ex.Message}");
             }
         }
+        
+        [HttpPut("{id}")]
+        public async Task<IActionResult> PutSubmission(long id, Submission submission)
+        {
+            if (id != submission.SubmissionId)
+            {
+                return BadRequest();
+            }
+
+            _context.Entry(submission).State = EntityState.Modified;
+
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!SubmissionExists(id))
+                {
+                    return NotFound();
+                }
+                else
+                {
+                    throw;
+                }
+            }
+
+            return NoContent();
+        }
+
+        private bool SubmissionExists(long id)
+        {
+            return _context.Submissions.Any(e => e.SubmissionId == id);
+        }
+
 
     }
 }

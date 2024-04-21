@@ -246,15 +246,19 @@
         <label for="postAttachment">Post Attachment URL:</label>
         <input type="text" @bind="newPostAttachment" id="postAttachment" />
     </div>
-    <div class="toggle-container">
-        <label class="toggle-label">Submission Post:</label>
-        <label class="toggle-switch">
-            <input type="checkbox" @bind="isSubmissionPost" />
-            <span class="toggle-slider"></span>
-        </label>
-    </div>
+    @if (UserService.GetLoggedInUser().Role != "Student")
+    {
+        <div class="toggle-container">
+            <label class="toggle-label">Submission Post:</label>
+            <label class="toggle-switch">
+                <input type="checkbox" @bind="isSubmissionPost" />
+                <span class="toggle-slider"></span>
+            </label>
+        </div>
+    }
     <button @onclick="AddPostAsync">Add Post</button>
 </div>
+
 
 
 @if (filteredPosts != null && filteredPosts.Any())
@@ -397,7 +401,7 @@ else
     private void ViewSubmission(Post submissionPost)
     {
         // Redirect to the submission page passing the submissionPost information
-        NavigationManager.NavigateTo($"/submit/{submissionPost.PostId}");
+    NavigationManager.NavigateTo($"/submit/{submissionPost.ClassroomId}/{submissionPost.PostId}");
     }
 
     private async Task AddCommentAsync(int postId, string commentContent)
@@ -460,8 +464,3 @@ else
         }
     }
 }
-
-
-
-
-

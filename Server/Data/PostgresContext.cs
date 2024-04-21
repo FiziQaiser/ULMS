@@ -71,6 +71,8 @@ public partial class PostgresContext : DbContext
 
     public virtual DbSet<SsoProvider> SsoProviders { get; set; }
 
+    public virtual DbSet<Submission> Submissions { get; set; }
+
     public virtual DbSet<Subscription> Subscriptions { get; set; }
 
     public virtual DbSet<User> Users { get; set; }
@@ -726,6 +728,22 @@ public partial class PostgresContext : DbContext
                 .HasComment("Auth: Uniquely identifies a SSO provider according to a user-chosen resource ID (case insensitive), useful in infrastructure as code.")
                 .HasColumnName("resource_id");
             entity.Property(e => e.UpdatedAt).HasColumnName("updated_at");
+        });
+
+        modelBuilder.Entity<Submission>(entity =>
+        {
+            entity.HasKey(e => new { e.SubmissionId, e.PostId, e.ClassroomId, e.StudentId }).HasName("submission_pkey");
+
+            entity.ToTable("submission");
+
+            entity.Property(e => e.SubmissionId)
+                .ValueGeneratedOnAdd()
+                .HasColumnName("submission_id");
+            entity.Property(e => e.PostId).HasColumnName("post_id");
+            entity.Property(e => e.ClassroomId).HasColumnName("classroom_id");
+            entity.Property(e => e.StudentId).HasColumnName("student_id");
+            entity.Property(e => e.StudentName).HasColumnName("student_name");
+            entity.Property(e => e.SubmissionUrl).HasColumnName("submission_url");
         });
 
         modelBuilder.Entity<Subscription>(entity =>

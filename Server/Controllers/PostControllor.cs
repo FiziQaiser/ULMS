@@ -54,6 +54,21 @@ namespace ULMS.API.Controllers
 
             return posts;
         }
+        
+        // GET: api/Post/Classroom/5/10
+        [HttpGet("Classroom/{classroomId}/{postId}")]
+        public async Task<ActionResult<Post>> GetPostByClassroomIdAndPostId(int classroomId, int postId)
+        {
+            var post = await _context.Posts
+                .FirstOrDefaultAsync(p => p.ClassroomId == classroomId && p.PostId == postId);
+
+            if (post == null)
+            {
+                return NotFound();
+            }
+
+            return post;
+        }
 
         // POST: api/Post
         [HttpPost]

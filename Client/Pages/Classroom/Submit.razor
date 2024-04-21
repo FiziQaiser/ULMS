@@ -1,75 +1,234 @@
-@page "/submit/{PostId:int}"
+@page "/submit/{ClassroomId:int}/{PostId:int}"
+@using ULMS.Shared.Models
+@inject NavigationManager NavigationManager
+@inject HttpClient Http
+@inject UserService UserService
 
-<h3>Submit Work</h3>
+<div class="post-card">
+    <h3>Submit Work</h3>
 
-@if (submissionPost != null)
-{
-    <div>
-        <h4>Post Description:</h4>
-        <p>@submissionPost.PostDescription</p>
-    </div>
-
-    @if (!string.IsNullOrWhiteSpace(submissionPost.PostAttachment))
+    @if (submissionPost != null)
     {
-        <div>
-            <h4>Attachment:</h4>
-            <a href="@submissionPost.PostAttachment" target="_blank">View Attachment</a>
+        <div class="post-info">
+            <h4>Post Description:</h4>
+            <p style="text-align: left;">@submissionPost.PostDescription</p>
         </div>
+
+        @if (UserService.GetLoggedInUser().Role == "Instructor")
+        {
+            <div class="post-info">
+                <h4>Submissions:</h4>
+                <div class="table-container">
+                    <table class="submission-table">
+                        <thead>
+                        <tr>
+                            <th>Student ID</th>
+                            <th>Student Name</th>
+                            <th>View Submission</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        @foreach (var submission in submissions)
+                        {
+                            <tr>
+                                <td>@submission.StudentId</td>
+                                <td>@submission.StudentName</td>
+                                <td><button @onclick="() => ViewSubmission(submission)" class="view-button">View</button></td>
+                            </tr>
+                        }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        }
+
+
+        @if (UserService.GetLoggedInUser().Role == "Student")
+        {
+            @if (userHasSubmittedWork)
+            {
+                <div class="alert alert-success" role="alert">
+                    You have submitted your work for this post.
+                </div>
+                <button @onclick="UnsubmitWork" class="btn-unsubmit">Unsubmit</button>
+            }
+            else
+            {
+                <div class="submission-form">
+                    <h4>Submit Your Work</h4>
+                    <div>
+                        <label for="submissionUrl">Submission URL:</label>
+                        <input type="text" @bind="submissionUrl" id="submissionUrl" />
+                    </div>
+                    <button @onclick="SubmitWork" class="btn-submit">Submit</button>
+                </div>
+            }
+        }
     }
-
-    <div class="submission-form">
-        <h4>Submit Your Work</h4>
-        <div>
-            <label for="submissionUrl">Submission URL:</label>
-            <input type="text" @bind="submissionUrl" id="submissionUrl" />
-        </div>
-        <button @onclick="SubmitWork">Submit</button>
-    </div>
-}
-else
-{
-    <p>No submission found for this post.</p>
-}
-
-@if (showSuccessMessage)
-{
-    <div class="alert alert-success" role="alert">
-        Submission successful!
-    </div>
-}
+</div>
 
 @code {
     [Parameter]
     public int PostId { get; set; }
 
+    [Parameter]
+    public int ClassroomId { get; set; }
+
     private string submissionUrl;
     private Post submissionPost;
-    private bool showSuccessMessage = false;
+    private bool userHasSubmittedWork = false;
+    private List<Submission> submissions = new List<Submission>();
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
-        // In a real application, you would retrieve the submission post from the backend based on the PostId
-        // For the sake of this example, let's assume submissionPost is retrieved from a database or API call
-        submissionPost = new Post
-        {
-            PostId = PostId,
-            PostDescription = "Your submission description goes here",
-            PostAttachment = "http://example.com/attachment.pdf"
-        };
+        await LoadSubmissionPost();
+        await LoadSubmissions();
+        await CheckUserSubmission();
     }
 
-    private void SubmitWork()
+    async Task LoadSubmissionPost()
     {
-        // Handle submission logic here, such as sending the submission URL to the backend
-        // For demonstration purposes, let's just display an alert with the submitted URL
-        if (!string.IsNullOrWhiteSpace(submissionUrl))
+        try
         {
-            // In a real application, you would send the submission URL to the backend for processing
-            // For demonstration purposes, let's just display an alert with the submitted URL
-            // alert($"Submitted URL: {submissionUrl}");
-            Console.WriteLine($"Submitted URL: {submissionUrl}");
-            showSuccessMessage = true;
+            // Make HTTP GET request to retrieve the post by classroom ID and post ID
+            var response = await Http.GetAsync($"api/Post/Classroom/{ClassroomId}/{PostId}");
+
+            if (response.IsSuccessStatusCode)
+            {
+                // Deserialize the response content to get the post data
+                submissionPost = await response.Content.ReadFromJsonAsync<Post>();
+            }
+            else
+            {
+                // Handle the case where the request fails (e.g., post not found)
+                // For now, set default values or display an error message
+                submissionPost = new Post
+                {
+                    PostId = PostId,
+                    PostDescription = "Unable to load post data",
+                    PostAttachment = ""
+                };
+            }
         }
+        catch (Exception ex)
+        {
+            // Handle exceptions (e.g., network error, deserialization error)
+            // For now, set default values or display an error message
+            submissionPost = new Post
+            {
+                PostId = PostId,
+                PostDescription = "An error occurred while loading post data",
+                PostAttachment = ""
+            };
+        }
+    }
+
+    async Task LoadSubmissions()
+    {
+        try
+        {
+            // Fetch submissions from the server based on ClassroomId and PostId
+            // Replace this with actual API call to retrieve submissions
+            // For demonstration purposes, let's assume submissions are loaded from a fake API
+            submissions = await Http.GetFromJsonAsync<List<Submission>>($"api/submission/{ClassroomId}/{PostId}");
+        }
+        catch (HttpRequestException ex)
+        {
+            // Handle the exception gracefully, such as displaying an error message
+            Console.WriteLine($"An error occurred while loading submissions: {ex.Message}");
+            // You can also set a default value for submissions or perform other error handling tasks
+            submissions = new List<Submission>();
+        }
+    }
+
+    private async Task CheckUserSubmission()
+    {
+        try
+        {
+            // Check if the logged-in user has already submitted work for this post
+            var loggedInUserId = UserService.GetLoggedInUser().Id;
+            userHasSubmittedWork = submissions.Any(s => s.StudentId == loggedInUserId);
+        }
+        catch (Exception ex)
+        {
+            // Handle the exception (e.g., log the error, display a message to the user)
+            Console.WriteLine($"Error checking user submission: {ex.Message}");
+        }
+    }
+
+    private async Task SubmitWork()
+    {
+        // Prepare the submission data
+        var newSubmission = new Submission
+        {
+            ClassroomId = ClassroomId,
+            PostId = PostId,
+            StudentId = UserService.GetLoggedInUser().Id,
+            StudentName = UserService.GetLoggedInUser().Name,
+            SubmissionUrl = submissionUrl
+        };
+
+        try
+        {
+            // Send the submission data to the server
+            var response = await Http.PostAsJsonAsync("api/submission", newSubmission);
+
+            if (response.IsSuccessStatusCode)
+            {
+                userHasSubmittedWork = true; // Set flag to true after successful submission
+                submissionUrl = ""; // Clear the input field
+                await LoadSubmissions(); // Reload submissions after successful submission
+            }
+            else
+            {
+                Console.WriteLine("Submission failed.");
+            }
+        }
+        catch (Exception ex)
+        {
+            // Handle error scenario
+            Console.WriteLine($"Error submitting work: {ex.Message}");
+        }
+    }
+
+    private async Task UnsubmitWork()
+    {
+        try
+        {
+            // Find the submission to delete
+            var submissionToDelete = submissions.FirstOrDefault(s => s.StudentId == UserService.GetLoggedInUser().Id);
+
+            if (submissionToDelete != null)
+            {
+                // Send request to delete the submission
+                var response = await Http.DeleteAsync($"api/submission/{submissionToDelete.ClassroomId}/{submissionToDelete.PostId}");
+
+                if (response.IsSuccessStatusCode)
+                {
+                    // Submission successfully deleted
+                    userHasSubmittedWork = false; // Hide the success message
+                }
+                else
+                {
+                    Console.WriteLine("Failed to unsubmit work.");
+                }
+            }
+            else
+            {
+                Console.WriteLine("No submission found to unsubmit.");
+            }
+        }
+        catch (Exception ex)
+        {
+            // Handle error scenario
+            Console.WriteLine($"Error unsubmitting work: {ex.Message}");
+        }
+    }
+
+    private void ViewSubmission(Submission submission)
+    {
+        // Redirect to the page to view the submission
+        NavigationManager.NavigateTo($"/submission/{submission.ClassroomId}/{submission.PostId}");
     }
 
     public class Post
@@ -78,11 +237,42 @@ else
         public string PostDescription { get; set; }
         public string PostAttachment { get; set; }
     }
+
+    public class Submission
+    {
+        public long SubmissionId { get; set; }
+        public long PostId { get; set; }
+        public long ClassroomId { get; set; }
+        public long StudentId { get; set; }
+        public string StudentName { get; set; }
+        public string SubmissionUrl { get; set; }
+    }
 }
 
 <style>
-    h3 {
+    .post-card {
+        background-color: #fff;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        transition: box-shadow 0.3s ease-in-out;
+        border-radius: 10px;
+        padding: 20px;
+    }
+
+    .post-card:hover {
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+    }
+
+    .post-info {
+        margin-bottom: 15px;
+    }
+
+    .post-info h4 {
+        margin-bottom: 5px;
         color: #333;
+    }
+
+    .post-info p {
+        color: #555;
     }
 
     .submission-form {
@@ -140,4 +330,62 @@ else
         color: #155724;
         border: 1px solid #c3e6cb;
     }
+
+    .btn-unsubmit {
+        background-color: #dc3545;
+        color: white;
+        border-color: #dc3545;
+    }
+
+    .btn-unsubmit:hover {
+        background-color: #c82333;
+        border-color: #bd2130;
+    }
+
+    .btn-view-attachment {
+        display: none;
+        padding: 10px 20px;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 16px;
+    }
+
+    .btn-view-attachment:hover {
+        background-color: #0056b3;
+    }
+    .table-container {
+        overflow-x: auto;
+    }
+    
+    .submission-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    
+    .submission-table th, .submission-table td {
+        padding: 8px;
+        border-bottom: 1px solid #ddd;
+        text-align: left;
+    }
+    
+    .submission-table th {
+        background-color: #f2f2f2;
+    }
+    
+    .view-button {
+        background-color: #007bff;
+        color: white;
+        border: none;
+        padding: 6px 12px;
+        cursor: pointer;
+        border-radius: 4px;
+    }
+    
+    .view-button:hover {
+        background-color: #0056b3;
+    }
+
 </style>

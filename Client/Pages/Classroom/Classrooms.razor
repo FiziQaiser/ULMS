@@ -87,8 +87,19 @@
 
     protected override async Task OnInitializedAsync()
     {
-        var loggedInUserId = UserService.GetLoggedInUser().Id;
-        userClassrooms = await HttpClient.GetFromJsonAsync<List<ULMS.Shared.Models.Classroom>>($"api/classroom/user/{loggedInUserId}");
+        if (UserService.GetLoggedInUser().Role != "Admin")
+        {
+            var loggedInUserId = UserService.GetLoggedInUser().Id;
+            userClassrooms = await HttpClient.GetFromJsonAsync<List<ULMS.Shared.Models.Classroom>>($"api/classroom/user/{loggedInUserId}");
+        }
+        else
+        {
+            // Fetch all classrooms
+            var allClassrooms = await HttpClient.GetFromJsonAsync<List<ULMS.Shared.Models.Classroom>>($"api/classroom");
+            
+            // Filter unique classrooms
+            userClassrooms = allClassrooms.GroupBy(c => c.ClassroomId).Select(g => g.First()).ToList();
+        }
     }
 
     private void NavigateToCourse(long ClassroomID)

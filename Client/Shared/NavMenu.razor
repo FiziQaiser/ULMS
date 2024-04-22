@@ -21,27 +21,17 @@
         @if (UserService.GetLoggedInUser() != null && UserService.GetLoggedInUser().Role == "Admin")
         {
             <div class="nav-item px-3">
-                <NavLink class="nav-link" href="/admindashboard">
-                    <span class="oi oi-dashboard" aria-hidden="true"></span> Admin Dashboard
-                </NavLink>
-            </div>
-            <div class="nav-item px-3">
                 <NavLink class="nav-link" href="/classroom">
                     <span class="oi oi-dashboard" aria-hidden="true"></span> Classroom
                 </NavLink>
             </div>
             <div class="nav-item px-3">
-                <NavLink class="nav-link" href="/department">
-                    <span class="oi oi-dashboard" aria-hidden="true"></span> Departments
-                </NavLink>
-            </div>
-            <div class="nav-item px-3">
-                <NavLink class="nav-link" href="/instructors">
+                <NavLink class="nav-link" href="/manageinstructor">
                     <span class="oi oi-dashboard" aria-hidden="true"></span> Instructors
                 </NavLink>
             </div>
             <div class="nav-item px-3">
-                <NavLink class="nav-link" href="/students">
+                <NavLink class="nav-link" href="/managestudent">
                     <span class="oi oi-dashboard" aria-hidden="true"></span> Students
                 </NavLink>
             </div>
@@ -117,7 +107,7 @@
             <!-- More Student-specific links here -->
         }
         <div class="nav-item px-3">
-            <NavLink class="nav-link" href="" @onclick="SignOut">
+            <NavLink class="nav-link" href="/" @onclick="SignOut">
                 <span class="oi oi-account-logout" aria-hidden="true"></span> Sign Out
             </NavLink>
         </div>

@@ -1,0 +1,215 @@
+@page "/managestudent"
+@inject NavigationManager NavigationManager;
+@inject HttpClient HttpClient
+@using ULMS.Shared.Models
+
+<div class="marks-container">
+    <h4 class="marks-title">Students List</h4>
+    <button @onclick="NavigateBack" class="btn-secondary">Back</button>
+    @* <button @onclick="InsertStudent" class="btn-primary">Insert Student</button> *@
+    
+    <button @onclick="ToggleSlider" class="insert-button">Insert New Student</button>
+    
+    <div class="@($"slider {(isSliderVisible ? "open" : "")}")">
+        <div class="slider-header">
+            <h4>Insert Student</h4>
+            <button @onclick="ToggleSlider" class="close-button">X</button>
+        </div>
+        <div class="slider-content">
+                <div class="form-group">
+                    <label for="name">Student Name:</label>
+                    <input type="text" id="name" @bind="newStudent.Name">
+                </div>
+                <div class="form-group">
+                    <label for="email">Student Email:</label>
+                    <input type="text" id="email" @bind="newStudent.Email">
+                </div>
+                <div class="form-group">
+                    <label for="password">Student Password:</label>
+                    <input type="text" id="password" @bind="newStudent.Password">
+                </div>
+                <button @onclick="InsertStudent" class="add-button">Add Student</button>
+        </div>
+    </div>
+    
+    <!-- Table to display user ids, names, and edit button -->
+    <table class="submission-table">
+        <thead>
+            <tr>
+                <th>User ID</th>
+                <th>User Name</th>
+                <th>User Email</th>
+                <th>Edit</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (userDetails != null && userDetails.Any())
+            {
+                @foreach (var user in userDetails)
+                {
+                    <tr>
+                        <td>@user.Id</td>
+                        <td>@user.Name</td>
+                        <td>@user.Email</td>
+                        <td><button @onclick="@(() => EditUser(user))" class="btn btn-primary">Edit</button></td>
+                    </tr>
+                }
+            }
+            else
+            {
+                <tr>
+                    <td colspan="4">No user details available</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@code {
+    private List<Account> userDetails;
+    Account newStudent = new Account();
+
+    bool isSliderVisible = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadStudents();
+    }
+
+    private async Task LoadStudents()
+    {
+        try
+        {
+            // Retrieve all students from the API
+            userDetails = await HttpClient.GetFromJsonAsync<List<Account>>("/account/students");
+        }
+        catch (Exception ex)
+        {
+            // Handle exceptions
+            Console.WriteLine($"Error: {ex.Message}");
+        }
+    }
+    void ToggleSlider()
+    {
+        isSliderVisible = !isSliderVisible;
+    }
+    private void NavigateBack()
+    {
+        NavigationManager.NavigateTo("/dashboard");
+    }
+
+    private void EditUser(Account user)
+    {
+        // Implement logic to navigate to the edit page for the selected user
+        // For example:
+        // NavigationManager.NavigateTo($"/edituser/{user.Id}");
+    }
+
+    private async Task InsertStudent()
+    {
+        // Insert the new student using the account controller
+        newStudent.Role = "Student";
+        var response = await HttpClient.PostAsJsonAsync("/account", newStudent);
+        if (response.IsSuccessStatusCode)
+        {
+            // Reload the student list after insertion
+            await LoadStudents();
+            newStudent = new Account(); // Reset the form
+            isSliderVisible = false; // Close the slider
+        }
+        else
+        {
+            // Handle error response
+            Console.WriteLine($"Failed to insert student. Status code: {response.StatusCode}");
+        }
+    }
+}
+
+<style>
+    .insert-button, .add-button, .download-button {
+        background-color: #007bff;
+        color: white;
+        border: none;
+        padding: 10px 15px;
+        cursor: pointer;
+        border-radius: 5px;
+        font-size: 16px;
+        margin-bottom: 10px;
+    }
+
+    .insert-button:hover, .add-button:hover, download-button:hover {
+        background-color: #0056b3;
+    }
+
+    .slider {
+        position: fixed;
+        right: 0;
+        top: 0;
+        width: 350px;
+        height: 100%;
+        background-color: #f9f9f9;
+        box-shadow: -5px 0 15px rgba(0,0,0,0.2);
+        padding: 20px;
+        transform: translateX(100%);
+        transition: transform 0.3s ease-in-out;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .slider.open {
+        transform: translateX(0);
+    }
+
+    .slider-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+
+    .close-button {
+        cursor: pointer;
+        border: none;
+        background-color: transparent;
+        font-size: 20px;
+        color: #333;
+    }
+
+    .slider-content {
+        flex-grow: 1;
+    }
+
+    .form-group {
+        margin-bottom: 15px;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 5px;
+        color: #333;
+    }
+
+    .form-group input {
+        width: 100%;
+        padding: 8px;
+        border-radius: 4px;
+        border: 1px solid #ddd;
+        box-sizing: border-box;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    
+    th, td {
+        padding: 8px;
+        border-bottom: 1px solid #ddd;
+        text-align: left;
+    }
+    
+    th {
+        background-color: #f2f2f2;
+    }
+</style>

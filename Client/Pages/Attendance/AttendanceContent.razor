@@ -47,7 +47,7 @@
         {
             // Fetch attendance records for the given classroom ID and logged user ID
             var loggedUserId = UserService.GetLoggedInUser().Id;
-            attendanceList = await HttpClient.GetFromJsonAsync<List<ULMS.Shared.Models.Attendance>>($"api/Attendance/classroom/{ClassroomID}/Student/{loggedUserId}");
+            attendanceList = await HttpClient.GetFromJsonAsync<List<ULMS.Shared.Models.Attendance>>($"api/Attendance/Classroom/{ClassroomID}/Student/{loggedUserId}");
         }
         catch (Exception ex)
         {

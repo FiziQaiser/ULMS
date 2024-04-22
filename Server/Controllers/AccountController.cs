@@ -52,6 +52,59 @@ public class AccountController : ControllerBase
             return NotFound();
         }
     }
+    // GET: /account/students
+    [HttpGet("/account/students")]
+    public IActionResult GetStudents()
+    {
+        var students = _context.Accounts.Where(a => a.Role == "Student").ToList();
+        if (students.Any())
+        {
+            return Ok(students);
+        }
+        else
+        {
+            return NotFound("No students found.");
+        }
+    }
+    
+    // GET: /account/students
+    [HttpGet("/account/instructors")]
+    public IActionResult GetInstructors()
+    {
+        var instructors = _context.Accounts.Where(a => a.Role == "Instructor").ToList();
+        if (instructors.Any())
+        {
+            return Ok(instructors);
+        }
+        else
+        {
+            return NotFound("No instructors found.");
+        }
+    }
+    [HttpPost("/account")]
+    public IActionResult AddAccount([FromBody] Account account)
+    {
+        if (account == null)
+        {
+            return BadRequest("Account data is missing.");
+        }
+
+        if (string.IsNullOrWhiteSpace(account.Email) || string.IsNullOrWhiteSpace(account.Password))
+        {
+            return BadRequest("Account email and password are required.");
+        }
+
+        try
+        {
+            _context.Accounts.Add(account);
+            _context.SaveChanges();
+            return CreatedAtAction(nameof(GetById), new { id = account.Id }, account);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, $"An error occurred while adding the account: {ex.Message}");
+        }
+    }
 
 }
 

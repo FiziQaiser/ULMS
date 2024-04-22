@@ -117,21 +117,22 @@ namespace ULMS.API.Controllers
             return attendanceList;
         }
         
-        // GET: api/Attendance/Classroom/{classroomId}/Date/{date}
+        // GET: api/Attendance/Classroom/{classroomId}/Student/{studentId}
         [HttpGet("Classroom/{classroomId}/Student/{studentId}")]
-        public async Task<ActionResult<IEnumerable<Attendance>>> GetAttendanceByClassroomIdAndStudentID(long classroomId, long studentId)
+        public async Task<ActionResult<IEnumerable<Attendance>>> GetAttendanceByClassroomIdAndStudentId(long classroomId, long studentId)
         {
             var attendanceList = await _context.Attendances
                 .Where(a => a.ClassroomId == classroomId && a.StudentId == studentId)
                 .ToListAsync();
 
-            if (!attendanceList.Any())
+            if (attendanceList == null || attendanceList.Count == 0)
             {
                 return NotFound();
             }
 
             return attendanceList;
         }
+
         
         // GET: api/Attendance/Classroom/{classroomId}/Date/{date}
         [HttpGet("Classroom/{classroomId}/Date/{date}")]

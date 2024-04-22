@@ -15,7 +15,7 @@
             <button @onclick="NavigateBack" class="back-button">Back</button>
         </div>
 
-        @if (UserService.GetLoggedInUser().Role == "Instructor")
+        @if (UserService.GetLoggedInUser().Role != "Student")
         {
             <div class="post-info">
                 <h4>Submissions:</h4>

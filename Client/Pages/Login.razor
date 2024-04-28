@@ -1,10 +1,17 @@
 @page "/"
 @using ULMS.Shared.Models
+@using System.Text.RegularExpressions
+@using System.Net
 @inject HttpClient Http
 @inject NavigationManager NavigationManager
 @inject UserService UserService
 
-
+@if (!string.IsNullOrEmpty(submissionMessage))
+{
+    <div class="alert alert-warning" role="alert">
+        @submissionMessage
+    </div>
+}
 <div class="login-form">
     <h1>EDU SYNC</h1>
     <div class="container">
@@ -12,9 +19,9 @@
             <div class="content">
                 <h2>Log In</h2>
                 <form>
-                    <input type="text" placeholder="User Name" @bind-value="email">
-                    <input type="password" placeholder="User Password" @bind-value="password">
-                    <button type="button" @onclick="SubmitForm" disabled="@isLoading">
+                    <input type="text" placeholder="Email" @bind-value="email">
+                    <input type="password" placeholder="Password" @bind-value="password">
+                    <button type="button" @onclick="SubmitLoginForm" disabled="@isLoading">
                         @if (isLoading)
                         {
                             <span class="loading-spinner"></span>
@@ -26,49 +33,253 @@
                         }
                     </button>
                 </form>
-                <p class="account">Don't Have An Account? <a href="#">Register</a></p>
+                <p class="account">Don't Have An Account? <a href="#" @onclick="ShowRegistrationForm">Register</a></p>
             </div>
             <div class="form-img">
                 <!-- Add any image or content you want to display -->
             </div>
         </div>
     </div>
+
+    @if (showRegistration)
+    {
+        <div class="registration-form">
+            <h2>Register</h2>
+            <form>
+                <input type="text" placeholder="Name" @bind-value="name">
+                <input type="text" placeholder="Email" @bind-value="newEmail">
+                <input type="password" placeholder="Password" @bind-value="newPassword">
+                <input type="text" placeholder="Role" @bind-value="role">
+                <div class="alert alert-danger" role="alert" style="display: @(showErrorMessage ? "block" : "none")">
+                    @errorMessage
+                </div>
+                <button type="button" @onclick="SubmitRegistrationForm" disabled="@isLoading">
+                    @if (isLoading)
+                    {
+                        <span class="loading-spinner"></span>
+                        <span>Loading...</span>
+                    }
+                    else
+                    {
+                        <span>Register</span>
+                    }
+                </button>
+            </form>
+        </div>
+    }
 </div>
 
-@if (!string.IsNullOrEmpty(submissionMessage))
-{
-    <div class="alert alert-warning" role="alert">
-        @submissionMessage
-    </div>
-}
+
 
 @code {
     private string email = "";
     private string password = "";
+    private string name = "";
+    private string newEmail = "";
+    private string newPassword = "";
+    private string role = "";
     private string submissionMessage = "";
+    private string errorMessage = ""; // Changed variable name
     private bool isLoading = false;
+    private bool showRegistration = false;
+    private bool showErrorMessage = false;
 
-    private async Task SubmitForm()
+    private async Task SubmitLoginForm()
     {
         isLoading = true;
         submissionMessage = "";
 
-        Account user = await Http.GetFromJsonAsync<Account>($"/account/validate?email={email}&password={password}");
-
-        if (user != null)
+        try
         {
-            UserService.SetLoggedInUser(user);
-            
-            submissionMessage = "Login successful.";
+            // Check if email or password is missing
+            if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(password))
+            {
+                throw new Exception("Please fill in both email and password.");
+            }
 
-            NavigationManager.NavigateTo("/dashboard");
+            // Call the API endpoint to validate the login
+            var response = await Http.GetAsync($"/account/validate?email={email}&password={password}");
 
+            if (response.IsSuccessStatusCode)
+            {
+                var user = await response.Content.ReadFromJsonAsync<Account>();
+
+                if (user != null)
+                {
+                    UserService.SetLoggedInUser(user);
+                    submissionMessage = "Login successful.";
+                    NavigationManager.NavigateTo("/dashboard");
+                }
+                else
+                {
+                    submissionMessage = "Invalid username or password.";
+                }
+            }
+            else if (response.StatusCode == HttpStatusCode.NotFound)
+            {
+                submissionMessage = "Email does not exist. Please register an account.";
+            }
+            else
+            {
+                submissionMessage = "An error occurred while processing your request.";
+            }
+        }
+        catch (Exception ex)
+        {
+            submissionMessage = "Invalid email or password.";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+
+
+    private void ShowRegistrationForm()
+    {
+        showRegistration = true;
+    }
+
+    private async Task SubmitRegistrationForm()
+    {
+        isLoading = true;
+        submissionMessage = "";
+
+        // Check if any input text is missing
+        if (string.IsNullOrWhiteSpace(name) || string.IsNullOrWhiteSpace(newEmail) || string.IsNullOrWhiteSpace(newPassword) || string.IsNullOrWhiteSpace(role))
+        {
+            errorMessage = "Please fill in all fields.";
+            showErrorMessage = true;
+            isLoading = false;
+            return;
         }
         else
         {
-            submissionMessage = "Login failed. Invalid username or password.";
+            showErrorMessage = false;
         }
 
+        // Check if role is valid
+        if (!IsRoleValid(role))
+        {
+            errorMessage = "Invalid role. Role must be 'Instructor', 'Student', or 'Admin'.";
+            showErrorMessage = true;
+            isLoading = false;
+            return;
+        }
+
+        // Check if password meets the requirements
+        if (!IsPasswordValid(newPassword))
+        {
+            errorMessage = "Password must be at least 8 characters long and contain at least one lowercase letter, one uppercase letter, one number, and one special character.";
+            showErrorMessage = true;
+            isLoading = false;
+            return;
+        }
+        
+        // Check if email is valid
+        if (!IsEmailValid(newEmail))
+        {
+            errorMessage = "Invalid email. Email must have a domain of '@nu.edu.pk', no special characters except '.', and a minimum length of 15 characters.";
+            showErrorMessage = true;
+            isLoading = false;
+            return;
+        }
+
+        var account = new Account
+        {
+            Name = name,
+            Email = newEmail,
+            Password = newPassword,
+            Role = role
+        };
+
+        var response = await Http.PostAsJsonAsync("/account", account);
+
+        if (response.IsSuccessStatusCode)
+        {
+            submissionMessage = "Registration successful.";
+        }
+        else
+        {
+            submissionMessage = "Registration failed. Please try again.";
+        }
+        showRegistration = false;
         isLoading = false;
     }
+
+    private bool IsPasswordValid(string password)
+    {
+        // Check if password length is at least 8 characters
+        if (password.Length < 8)
+        {
+            return false;
+        }
+
+        // Check if password contains at least one lowercase letter
+        if (!password.Any(char.IsLower))
+        {
+            return false;
+        }
+
+        // Check if password contains at least one uppercase letter
+        if (!password.Any(char.IsUpper))
+        {
+            return false;
+        }
+
+        // Check if password contains at least one digit
+        if (!password.Any(char.IsDigit))
+        {
+            return false;
+        }
+
+        // Check if password contains at least one special character
+        if (!password.Any(ch => !char.IsLetterOrDigit(ch)))
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+    private bool IsRoleValid(string role)
+    {
+        // Check if role is one of the valid options
+        return role == "Instructor" || role == "Student" || role == "Admin";
+    }
+    
+    private bool IsEmailValid(string email)
+    {
+        // Check if email length is at least 15 characters
+        if (email.Length < 15)
+        {
+            return false;
+        }
+
+        // Split the email into username and domain
+        var parts = email.Split('@');
+        if (parts.Length != 2)
+        {
+            return false;
+        }
+
+        var username = parts[0];
+        var domain = parts[1];
+
+        // Check if domain is correct
+        if (domain != "nu.edu.pk")
+        {
+            return false;
+        }
+
+        // Check if username contains only valid characters
+        if (!Regex.IsMatch(username, @"^[a-zA-Z0-9._]+$"))
+        {
+            return false;
+        }
+
+        return true;
+    }
+
 }

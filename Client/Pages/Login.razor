@@ -215,6 +215,11 @@
         {
             return false;
         }
+        
+        if (password.Length > 20)
+        {
+            return false;
+        }
 
         // Check if password contains at least one lowercase letter
         if (!password.Any(char.IsLower))

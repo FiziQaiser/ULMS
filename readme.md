@@ -1,4 +1,4 @@
-# University Learning Management System (LMS)
+# University Learning Management System (ULMS)
 
 I developed a comprehensive University Learning Management System (ULMS) using Blazor, leveraging its capabilities for creating interactive web applications with C# and .NET. The ULMS is designed to support various user roles, including Students, Instructors, and Admins, each with specific functionalities.
 
@@ -34,7 +34,9 @@ I developed a comprehensive University Learning Management System (ULMS) using B
 - **HttpClient**: For making HTTP requests to the backend API.
 - **Dependency Injection**: Ensuring modularity and easy maintenance of the codebase.
 
-This LMS provides a robust platform for managing university operations, enhancing the educational experience for students, and streamlining administrative tasks for instructors and admins. For more details checkout Report.pdf.
+This LMS provides a robust platform for managing university operations, enhancing the educational experience for students, and streamlining administrative tasks for instructors and admins. 
+
+For more details, please refer to the [full report](./report.pdf).
 
 
 ## Setup

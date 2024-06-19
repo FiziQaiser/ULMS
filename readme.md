@@ -36,7 +36,7 @@ I developed a comprehensive University Learning Management System (ULMS) using B
 
 This LMS provides a robust platform for managing university operations, enhancing the educational experience for students, and streamlining administrative tasks for instructors and admins. 
 
-For more details, please refer to the [full report](./report.pdf).
+For more details, please refer to the [full report](./Report.pdf).
 
 
 ## Setup

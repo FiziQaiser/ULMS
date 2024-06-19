@@ -53,11 +53,3 @@ or
 ```
 dotnet ef dbcontext scaffold "Host=aws-0-us-west-1.pooler.supabase.com;Port=5432; Database=postgres; Username=postgres.cvikrfiqwuwfbnfqxvpv; Password=IOrLlIapntLwoLbD" Npgsql.EntityFrameworkCore.PostgreSQL --table tablename1 --table tablename2 -o Models/ --force
 ```
-
-move 'Shared/Models/PostgresContext.cs' to 'Server/Data/PostgresContext.cs'
-
-replace 'namespace Shared' to 'namepsace Server' in Server/Data/PostgresContext.cs
-
-import 'using Shared.Models' in Server/Data/PostgresContext.cs
-
-create controller to make APIs
